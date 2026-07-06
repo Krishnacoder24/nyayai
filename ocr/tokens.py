@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 
 @dataclass
-class WordToken:
-    text: str
+class LineSpan:
+    text: str        # full line text, words joined with single space
     page_no: int
-    source: str  # "native" or "surya"
-    x0: float
-    y0: float
-    x1: float
-    y1: float
+    source: str      # "native" or "surya"
+    x0: float        # left edge of the line
+    y0: float        # top edge of the line
+    x1: float        # right edge of the line
+    y1: float        # bottom edge of the line
 
     @property
     def bbox(self):
