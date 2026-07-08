@@ -30,42 +30,48 @@ class SuryaExtractor:
         doc = pdfium.PdfDocument(pdf_path)
         images = []
         for page_no in page_numbers:
-            bitmap = doc[page_no].render(scale=scale) #type: ignore
+            bitmap = doc[page_no].render(scale=scale) #type:ignore
             images.append(bitmap.to_pil())
         doc.close()
         return images
 
-    def extract(self, pdf_path: str, page_numbers: list[int]) -> list[LineSpan]:
+    def extract(self, pdf_path: str, page_numbers: list[int], chunk_size: int = 4) -> list[LineSpan]:
         """
         runs surya only on the given page numbers.
-        router.py passes in only the pages that need OCR.
-        renders all pages first with one pdf open, then runs OCR.
+        renders all pages with one pdf open, then feeds surya in chunks
+        to avoid OOM on large scanned documents - batching all 30 pages
+        at once on a 6gb card will OOM since detection holds activation
+        memory for every image simultaneously.
+        chunk_size=4 is conservative for 6gb vram, tune up if you have headroom.
         """
         images = self._render_pages(pdf_path, page_numbers)
 
-        # surya can take all images in one batch call - more efficient
-        # than calling recognition_predictor once per page
-        results = self.recognition_predictor(
-            images,
-            [None] * len(images),  # None = auto detect language per page
-            self.detection_predictor,
-        )
-
         all_spans = []
-        for page_no, page_result in zip(page_numbers, results):
-            for line in page_result.text_lines:
-                text = line.text.strip()
-                if not text:
-                    continue
 
-                x0, y0, x1, y1 = line.bbox #type: ignore
-                span = LineSpan(
-                    text=text,
-                    page_no=page_no,
-                    source="surya",
-                    x0=x0, y0=y0, x1=x1, y1=y1,
-                )
-                if span.is_valid():
-                    all_spans.append(span)
+        for i in range(0, len(images), chunk_size):
+            chunk_images = images[i:i + chunk_size]
+            chunk_page_nos = page_numbers[i:i + chunk_size]
+
+            results = self.recognition_predictor(
+                chunk_images,
+                [None] * len(chunk_images),
+                self.detection_predictor,
+            )
+
+            for page_no, page_result in zip(chunk_page_nos, results):
+                for line in page_result.text_lines:
+                    text = line.text.strip()
+                    if not text:
+                        continue
+
+                    x0, y0, x1, y1 = line.bbox #type:ignore
+                    span = LineSpan(
+                        text=text,
+                        page_no=page_no,
+                        source="surya",
+                        x0=x0, y0=y0, x1=x1, y1=y1,
+                    )
+                    if span.is_valid():
+                        all_spans.append(span)
 
         return all_spans
