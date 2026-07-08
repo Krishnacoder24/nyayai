@@ -8,3 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+.env
+tests/__pycache__/
+tests/samples/
+
