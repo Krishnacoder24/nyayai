@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 # B-CITE  - beginning of a wrong citation span
 # I-CITE  - continuation of a wrong citation span
 
-LABELS = ["O", "B-SPELL", "I-SPELL", "B-GRAM", "I-GRAM", "B-CITE", "I-CITE"]
+LABELS = ["O", "B-SPELL", "I-SPELL", "B-GRAM", "I-GRAM", "B-CITE", "I-CITE", "B-ENT" , "I-ENT"]
 LABEL2ID = {l: i for i, l in enumerate(LABELS)}
 ID2LABEL = {i: l for i, l in enumerate(LABELS)}
 
@@ -19,6 +19,7 @@ ERROR_TYPES = {
     "SPELL": "spelling",
     "GRAM": "grammar",
     "CITE": "citation",
+    "ENT": "entity"
 }
 
 
@@ -45,5 +46,6 @@ class ErrorSpan:
             "spelling": "#FFD700",    # yellow
             "grammar": "#FFA500",     # orange
             "citation": "#FF4444",    # red
+            "entity": "#00BFFF"       # deep sky blue
         }
         return colors.get(self.error_type, "#CCCCCC")

@@ -16,7 +16,7 @@ errors = analyze(spans)  # spans is list[LineSpan] from ocr.pipeline.extract()
 
 ---
 
-## honest picture before  start
+## honest picture before start
 
 **InLegalBERT has no error-detection head out of the box.**
 `law-ai/InLegalBERT` is pretrained on Indian legal text (good — it
@@ -35,10 +35,11 @@ fine-tuning itself (generating synthetic data + training) is a separate
 branch (`feature/finetune`) that runs in parallel and feeds weights back
 into this scaffold.
 
-**exception: citation checking doesn't need fine-tuning at all.**
+**exception: citation checking and entity checking don't need fine-tuning.**
 `citation_checker.py` is pure retrieval — regex extracts citation spans,
-Qdrant checks them against the IPC/BNS/Constitution corpus. this works
-and produces real results right now, independently of the model.
+Qdrant checks them against the IPC/BNS/Constitution corpus.
+`entity_checker.py` is pure NER + fuzzy matching — no training needed,
+works on real documents right now.
 
 ---
 
@@ -52,6 +53,7 @@ model/
 ├── predict.py           loads InLegalBERT, runs token classification
 ├── postprocess.py       merges BIO token labels into ErrorSpans
 ├── citation_checker.py  checks citation spans against Qdrant
+├── entity_checker.py    checks entity consistency across the full document
 └── pipeline.py          analyze(spans) -> list[ErrorSpan]
 ```
 
@@ -65,6 +67,8 @@ defines `ErrorSpan` and the BIO label scheme used across all files:
 - `B-SPELL / I-SPELL` — spelling error
 - `B-GRAM / I-GRAM` — grammar error
 - `B-CITE / I-CITE` — wrong IPC/BNS citation
+- `B-ENT / I-ENT` — entity inconsistency (petitioner name mismatch,
+  wrong place name, conflicting evidence reference)
 
 `LABEL2ID` and `ID2LABEL` live here as the single source of truth.
 every other file imports from here — no label mapping defined anywhere else.
@@ -177,7 +181,7 @@ this gives a tight bounding box that covers all tokens in the span.
 independently of the ML model, extracts citation patterns from spans
 using regex and checks them against the IPC/BNS/Constitution corpus
 stored in Qdrant. flags citations that don't match any known valid
-section as `B-CITE` errors.
+section as `CITE` errors.
 
 patterns it looks for:
 - `Section \d+ IPC`
@@ -204,16 +208,82 @@ db isn't running.
 
 ---
 
+### `entity_checker.py`
+**what it does:**
+a document-level consistency checker, completely independent of the ML
+token classifier. the token classifier is local — it sees 512 tokens at
+a time and has no memory of what appeared on page 1 when it's processing
+page 3. entity consistency is a document-level problem that needs a
+separate approach.
+
+**the problem it solves:**
+an FIR where the petitioner is "Ramesh Kumar" on page 1 but "Rakesh Kumar"
+on page 3 is a serious legal error. similarly: a witness referred to as
+"Anwar Sheikh" in the complaint but "Anwar Shaikh" in the evidence list,
+or a location written as "Patna" in one place and "Patana" elsewhere.
+
+**how it works:**
+1. NER pass — run a NER model over all spans to extract named entities:
+   persons (petitioner, respondent, witness, judge), places, organizations,
+   evidence references. the Kalamkar corpus has fine-tuned NER models for
+   Indian legal text with 14 entity types including PETITIONER, RESPONDENT,
+   WITNESS, COURT, STATUTE — use one of these, not a generic English NER.
+2. clustering — group mentions that refer to the same real-world entity
+   using fuzzy string matching (rapidfuzz edit distance). "Ramesh Kumar"
+   and "Rakesh Kumar" have edit distance 1, likely the same person.
+3. canonical form — pick the most frequent mention as the canonical name.
+4. flag deviations — any mention that differs from canonical form beyond
+   a threshold is flagged as an `ENT` error, with the canonical form as
+   the suggestion.
+
+**inputs:** `list[LineSpan]` (full document, not chunks)
+**outputs:** `list[ErrorSpan]` (entity inconsistency errors only)
+
+**industry practice — NER model choice:**
+don't use spacy's default English NER — it doesn't know "IPC", "FIR",
+"BNS", Indian names, or Indian place names. use a model fine-tuned on
+Indian legal text. options:
+- `law-ai/InLegalBERT` fine-tuned on Kalamkar NER corpus
+- `ai4bharat/indner` for multilingual Indian NER
+the NER model is separate from the error-detection classifier — two
+different heads, two different tasks.
+
+**industry practice — fuzzy threshold tuning:**
+edit distance threshold for "same entity" needs tuning per entity type.
+person names: threshold ~2 (typos, transpositions). place names: threshold
+~1 (stricter, "Patna" vs "Patana" is almost certainly a typo but "Patna"
+vs "Pune" is a different city). start conservative, tune on real FIRs.
+
+**industry practice — don't flag intentional variations:**
+"Supreme Court of India" and "the Court" are the same entity but not
+a consistency error — one is a formal reference, one is a pronoun-like
+shorthand. filter out short generic references before clustering.
+minimum entity mention length of ~3 characters is a reasonable floor.
+
+**industry practice — graceful degradation:**
+if the NER model isn't available or fails, return empty list. entity
+checking is valuable but not critical path — the pipeline should still
+return spelling/grammar/citation errors even if entity checking is down.
+
+---
+
 ### `pipeline.py`
 **what it does:**
 the single entry point for phase 2. calls preprocess → predict →
-postprocess, then citation checker, deduplicates overlapping spans,
-and returns the final sorted list of `ErrorSpan`s.
+postprocess for ML errors, then citation checker, then entity checker,
+deduplicates overlapping spans, and returns the final sorted list.
 
 ```python
 from model.pipeline import analyze
 errors = analyze(spans)  # list[LineSpan] in, list[ErrorSpan] out
 ```
+
+**execution order:**
+1. ML token classifier (spelling + grammar + citation via model)
+2. citation checker (catches citations model missed, cross-checks Qdrant)
+3. entity checker (document-level consistency, full document pass)
+4. deduplicate overlapping spans (ML + citation checker might both flag same span)
+5. sort by (page_no, y0, x0) and return
 
 **industry practice — deduplication:**
 ML model and citation checker might flag the same span. before returning,
@@ -222,6 +292,24 @@ deduplicate by checking bbox overlap. keep the one with higher confidence.
 **industry practice — sort output:**
 return errors sorted by `(page_no, y0, x0)` — reading order. makes the
 frontend's job trivial and makes debugging output human-readable.
+
+---
+
+## updated label scheme (schemas.py needs one addition)
+
+```python
+LABELS = [
+    "O",
+    "B-SPELL", "I-SPELL",   # spelling errors
+    "B-GRAM",  "I-GRAM",    # grammar errors
+    "B-CITE",  "I-CITE",    # wrong IPC/BNS citations
+    "B-ENT",   "I-ENT",     # entity inconsistency
+]
+```
+
+`B-ENT / I-ENT` is added to cover entity errors from `entity_checker.py`
+so all error types share the same `ErrorSpan` structure and the frontend
+only needs to handle one data shape.
 
 ---
 
@@ -238,8 +326,9 @@ for e in errors:
     print(e.page_no, e.error_type, e.text, e.bbox, e.confidence)
 ```
 
-runs without crashing. returns empty list if no fine-tuned weights exist.
-returns real errors once weights land in `model/checkpoint/`.
+runs without crashing. citation and entity errors are real and detectable
+right now. spelling and grammar errors return empty until fine-tuned
+weights land in `model/checkpoint/`.
 
 ---
 
