@@ -1,0 +1,1 @@
+"""Queue names and routing keys."""
