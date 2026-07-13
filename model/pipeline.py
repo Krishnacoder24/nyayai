@@ -21,8 +21,8 @@ from model.schemas import ErrorSpan
 from model.preprocess import build_chunks
 from model.predict import predict
 from model.postprocess import build_error_spans
-from model.citation_checker import check_citations
-from model.entity_checker import check_entities
+from rules.citation_checker import check_citations
+from rules.entity_checker import check_entities
 
 logger = logging.getLogger(__name__)
 
