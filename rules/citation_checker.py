@@ -5,23 +5,27 @@ completely independent of the ML model — pure regex + vector retrieval.
 works right now even without fine-tuned weights. only needs Qdrant running
 and the corpus ingested (feature/corpus). if Qdrant is down, returns empty
 list gracefully — never crashes the pipeline.
+
+lookup itself goes through corpus.search.lookup_section rather than
+querying Qdrant directly here — corpus.search is the single place that
+knows the corpus's field names and collection, so rules code doesn't
+have to stay in sync with it by hand.
 """
 
 import logging
 import re
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import Filter, FieldCondition, MatchValue
 
 from ocr.tokens import LineSpan
 from model.schemas import ErrorSpan
+from corpus.search import lookup_section
 
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 QDRANT_URL = settings.qdrant_url
-COLLECTION_NAME = settings.qdrant_collection
 
 # citation patterns found in Indian legal documents
 # order matters — more specific patterns first
@@ -92,22 +96,11 @@ def _lookup_section(client: QdrantClient, section_no: str, act: str) -> bool:
     returns False if not found or if found but marked repealed.
     """
     try:
-        results = client.query_points(
-            collection_name=COLLECTION_NAME,
-            query_filter=Filter(
-                must=[
-                    FieldCondition(key="section_no", match=MatchValue(value=section_no)),
-                    FieldCondition(key="act", match=MatchValue(value=act)),
-                ]
-            ),
-            limit=1,
-            with_payload=True,
-        )
+        payload = lookup_section(section_no, act, client=client)
 
-        if not results.points:
+        if payload is None:
             return False
 
-        payload = results.points[0].payload or {}
         # corpus ingestion (feature/corpus) should set status="active" or "repealed"
         return payload.get("status", "active") != "repealed"
 
