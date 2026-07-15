@@ -16,6 +16,8 @@ approach:
      using fuzzy string matching (rapidfuzz ratio)
   3. canonical form — most frequent mention in each cluster is canonical
   4. flag deviations — mentions that differ from canonical are ENT errors
+
+  Currently doesn't work well will Indian names.
 """
 
 import logging
