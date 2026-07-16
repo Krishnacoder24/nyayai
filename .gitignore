@@ -12,3 +12,132 @@ wheels/
 tests/__pycache__/
 tests/samples/
 
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# Environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# Node / Vite
+# =========================
+frontend/node_modules/
+frontend/dist/
+
+# If frontend is at repo root:
+# node_modules/
+# dist/
+
+# =========================
+# Docker
+# =========================
+*.pid
+
+# =========================
+# Generated PDFs / Reports
+# =========================
+output/
+reports/
+annotated/
+exports/
+
+# =========================
+# Runtime Data
+# =========================
+data/raw/
+data/temp/
+data/cache/
+data/uploads/
+data/processed/
+
+# Keep directory structure
+!data/.gitkeep
+
+# =========================
+# Qdrant
+# =========================
+qdrant_storage/
+
+# =========================
+# Redis
+# =========================
+dump.rdb
+
+# =========================
+# Model Cache
+# =========================
+.cache/
+.huggingface/
+hf_cache/
+transformers_cache/
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Temporary
+# =========================
+tmp/
+temp/
+*.tmp
+*.bak
+
+# =========================
+# Secrets
+# =========================
+*.pem
+*.key
+*.crt
+
+output/
+├── annotated/
+├── html/
+├── json/
+└── temp/
+output/
+docker/qdrant/
+docker/redis/
