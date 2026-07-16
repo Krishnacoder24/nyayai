@@ -31,6 +31,7 @@ order to build:
 3. `model/postprocess.py` - merges token labels into proper spans (so "Section 302 IPC" is 1 span not 4)
 4. `model/citation_checker.py` - checks flagged citations against qdrant (is this section even real / still active)
 5. `model/pipeline.py` - analyze(tokens) -> list of ErrorSpan, single entry point
+6. `model/schemas.py`  — defines ErrorSpan dataclass
 
 depends on phase 1 (needs WordToken).
 

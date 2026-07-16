@@ -25,3 +25,8 @@ BATCH_SIZE = 16
 
 # acts for parsing and chunking
 ACTS = ["ipc", "bns", "bnss", "cpc", "constitution"]
+
+# Rendering constants for anotate_pdf.py, report.py, html_report.py, colors.py
+FILL_ALPHA = 0.35
+STROKE_ALPHA = 0.9
+STROKE_WIDTH = 1.2
