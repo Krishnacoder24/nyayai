@@ -1,48 +1,31 @@
-# nyayai
+# NyayAI
 
-an AI tool that proofreads indian legal documents (FIRs, contracts, court notices etc) and highlights spelling, grammar and semantic errors.
+An AI-powered error detection tool for Indian legal documents (FIRs, contracts,
+court notices). NyayAI ingests a PDF, detects spelling, grammar, and semantic
+errors — including wrong IPC/BNS section citations and entity inconsistencies
+across a document — and returns an annotated PDF with color-coded highlights
+plus a structured report.
 
-built this as a personal project to learn NLP. still very much work in progress — but a lot further along than this file used to say.
-
----
-
-## what it does
-
-upload a PDF → get back the same PDF with colored highlights showing:
-- 🟡 spelling mistakes
-- 🟠 grammar errors
-- 🔴 wrong IPC/BNS section references
-- 🟣 inconsistent names/places across the document (e.g. "Ramesh Kumar" on page 1, "Rakesh Kumar" on page 3)
-
-plus a JSON report and a standalone HTML report you can open without the app.
+**Everything runs locally.** No external OCR or LLM APIs — built for courts,
+law firms, and legal aid organisations where document confidentiality and
+per-document cost both matter.
 
 ---
 
-## how it works (roughly)
+## Status
 
-```
-PDF
- ↓
-extract text line by line
-  - if page has a text layer → pdfplumber (fast)
-  - if page is scanned        → surya OCR (slow but works)
- ↓
-run InLegalBERT token classification
-  - classifies each token as: correct / spelling error / grammar error / wrong citation
-  - (entity consistency is NOT part of the BERT model - see below)
- ↓
-in parallel, two rule-based checkers run over the whole document:
-  - citation_checker: regex-extracts "Section X IPC/BNS/..." style citations,
-    checks each against IPC/BNS/BNSS/Constitution/CPC data in qdrant
-  - entity_checker: spacy NER + fuzzy matching across ALL pages, flags name/place
-    spellings that drift from the most common form used elsewhere in the doc
- ↓
-merge all three sources, drop duplicate detections, sort into reading order
- ↓
-draw colored boxes on the original PDF + build JSON/HTML reports
- ↓
-FastAPI + Celery run this as a background job, React shows the result
-```
+| Component | Status |
+|---|---|
+| OCR (`ocr/`) | ✅ done |
+| Model scaffold (`model/`) | ✅ done — no fine-tuned weights yet, returns all-`O` labels |
+| Corpus (`corpus/`) | 🟡 infra done (schemas, chunker, embeddings, uploader, search) — act-specific parsers in progress |
+| Rules (`rules/`) | ✅ done — see known limitations below |
+| Pipeline (`pipeline/`) | ✅ done |
+| Renderer (`renderer/`) | ✅ done |
+| API + workers (`api/`, `workers/`, `services/`) | ✅ done |
+| Frontend (`frontend/`) | 🟡 scaffolded — running against mock data, not yet wired to the real API |
+| Fine-tuning (`train/`) | ⬜ not started |
+
 
 the model handles spelling/grammar/citation-shape; the two rule-based checkers
 handle things that need either an external source of truth (citation_checker)
@@ -51,7 +34,7 @@ ever sees 512 tokens at a time.
 
 ---
 
-## folder structure
+## Architecture
 
 this is the actual frozen structure — no more reshuffling planned.
 
@@ -138,13 +121,14 @@ instead (see "async jobs, no redis" below).
 
 **verify GPU works:**
 ```bash
-python -c "import torch; print(torch.cuda.get_device_name(0))"
+docker-compose up -d qdrant
 ```
 
 **ingest the legal corpus** (one-time, or after an act gets amended):
 ```bash
 uv run python scripts/ingest_corpus.py --all
 ```
+The `-Q pdf_processing` is required — see the note above.
 
 ---
 
@@ -208,7 +192,7 @@ API. no numbers to report yet since none of this has actually run.
 
 ---
 
-## running tests
+## Dependency versions (frozen)
 
 ```bash
 pytest tests/ -v
@@ -309,7 +293,7 @@ pytest tests/ -v
 
 ---
 
-## references
+See `docs/architecture.md` for the full frozen folder structure.
 
 - [InLegalBERT](https://huggingface.co/law-ai/InLegalBERT)
 - [surya OCR](https://github.com/VikParuchuri/surya)

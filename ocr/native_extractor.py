@@ -10,10 +10,10 @@ import pdfplumber
 from itertools import groupby
 
 from ocr.tokens import LineSpan
-
+from pathlib import Path
 
 class NativeExtractor:
-    def extract(self, pdf_path: str) -> list[LineSpan]:
+    def extract(self, pdf_path: Path) -> list[LineSpan]:
         spans = []
 
         with pdfplumber.open(pdf_path) as pdf:
@@ -54,7 +54,7 @@ class NativeExtractor:
 
         return spans
 
-    def has_text_layer(self, pdf_path: str, min_chars_per_page: int = 20) -> dict[int, bool]:
+    def has_text_layer(self, pdf_path: Path, min_chars_per_page: int = 20) -> dict[int, bool]:
         """
         per page check - does this page have enough native text to skip OCR?
         router.py uses this to decide which pages to send to surya.

@@ -6,12 +6,14 @@ have to re-open the pdf and re-extract what we already have.
 
 import pdfplumber
 from itertools import groupby
+from pathlib import Path
 
 from ocr.tokens import LineSpan
 from ocr.native_extractor import NativeExtractor
 
 
-def route(pdf_path: str, min_chars_per_page: int = 20) -> tuple[list[LineSpan], list[int]]:
+
+def route(pdf_path: Path, min_chars_per_page: int = 20) -> tuple[list[LineSpan], list[int]]:
     """
     returns (native_spans, scanned_pages)
     native_spans  -> already extracted LineSpans from pages with a text layer

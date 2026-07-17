@@ -6,9 +6,10 @@ in one pass, then only calls surya on pages that actually need it.
 
 from ocr.tokens import LineSpan
 from ocr.router import route
+from pathlib import Path
 
 
-def extract(pdf_path: str, min_chars_per_page: int = 2000) -> list[LineSpan]:
+def extract(pdf_path: Path, min_chars_per_page: int = 2000) -> list[LineSpan]:
     native_spans, scanned_pages = route(pdf_path, min_chars_per_page)
 
     spans = list(native_spans)

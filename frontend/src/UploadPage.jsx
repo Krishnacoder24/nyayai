@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-export default function UploadPage({ onFileSelected, status }) {
+export default function UploadPage({ onFileSelected, status, error }) {
   const inputRef = useRef(null)
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -59,6 +59,12 @@ export default function UploadPage({ onFileSelected, status }) {
           </>
         )}
       </div>
+
+      {error && (
+        <p className="upload-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

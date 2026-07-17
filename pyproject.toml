@@ -1,12 +1,63 @@
 [project]
 name = "nyayai"
 version = "0.1.0"
-description = "Add your description here"
+description = "Legal Intelligence & Document Audit System"
 readme = "README.md"
 requires-python = ">=3.10"
+
 dependencies = [
+    # ------------------------
+    # OCR
+    # ------------------------
+    "pdfplumber",
+    "pdf2image==1.17.0",
+    "surya-ocr==0.9.3",
+
+    # ------------------------
+    # ML
+    # ------------------------
+    "transformers==4.48.0",
+    "datasets==4.0.0",
+    "accelerate==1.13.0",
+    "seqeval==1.2.2",
+    "evaluate==0.4.6",
+    "sentence-transformers==5.1.0",
+
+    # ------------------------
+    # Vector DB
+    # ------------------------
+    "qdrant-client==1.17.1",
+
+    # ------------------------
+    # Backend
+    # ------------------------
+    "fastapi==0.115.0",
+    "uvicorn[standard]==0.30.6",
+    "python-multipart==0.0.12",
+
+    # ------------------------
+    # Settings
+    # ------------------------
+    "pydantic==2.8.2",
+    "pydantic-settings==2.5.2",
+
+    # ------------------------
+    # Background Jobs
+    # ------------------------
+    "celery==5.4.0",
+
+    # Filesystem result backend
+    "sqlalchemy>=2.0.51",
+    "greenlet>=3.5.3",
+
+    # ------------------------
+    # Utilities
+    # ------------------------
     "rapidfuzz>=3.14.5",
     "spacy>=3.8.14",
+    "pypdf",
+    "reportlab",
+    "pytest",
 ]
 
 [tool.uv.sources]

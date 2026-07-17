@@ -8,6 +8,7 @@ whole reason we switched from WordToken to LineSpan.
 
 import pypdfium2 as pdfium
 from PIL import Image
+from pathlib import Path
 
 from surya.detection import DetectionPredictor
 from surya.recognition import RecognitionPredictor
@@ -22,7 +23,7 @@ class SuryaExtractor:
         self.detection_predictor = DetectionPredictor()
         self.recognition_predictor = RecognitionPredictor()
 
-    def _render_pages(self, pdf_path: str, page_numbers: list[int], scale: float = 2.0) -> list[Image.Image]:
+    def _render_pages(self, pdf_path: Path, page_numbers: list[int], scale: float = 2.0) -> list[Image.Image]:
         """
         opens the pdf once, renders all requested pages, closes it.
         one parse of the pdf header instead of one per page.
@@ -36,7 +37,7 @@ class SuryaExtractor:
         doc.close()
         return images
 
-    def extract(self, pdf_path: str, page_numbers: list[int], chunk_size: int = 4) -> list[LineSpan]:
+    def extract(self, pdf_path: Path, page_numbers: list[int], chunk_size: int = 4) -> list[LineSpan]:
         """
         runs surya only on the given page numbers.
         renders all pages with one pdf open, then feeds surya in chunks
