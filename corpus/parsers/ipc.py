@@ -29,6 +29,11 @@ number being waited for, so it's silently skipped rather than accepted.
 """
 
 import re
+<<<<<<< HEAD
+=======
+from dataclasses import dataclass, field
+import json
+>>>>>>> 0ce4b09 (feat: integrate official IPC and CrPC section mappings)
 from pathlib import Path
 
 import pdfplumber
@@ -37,7 +42,7 @@ from corpus.schemas import Section
 from corpus.data.ipc_bns_mapping import IPC_TO_BNS
 
 ACT = "IPC"
-DEFAULT_STATUS = "repealed"  # BNS replaced the IPC in full, effective 2024-07-01
+DEFAULT_STATUS = "repealed"  # BNS replaced the IPC in full, effective 2024-0s7-01
 EFFECTIVE_DATE = "1860-01-01"
 
 # marks where the TOC ends and the actual numbered Act text begins
@@ -72,15 +77,62 @@ BODY_CANDIDATE = re.compile(
 # TOC titles that mean "this section has no body text at all"
 STUB_MARKERS = ("[omitted", "[repealed")
 
+# Path to the official IPC → BNS mapping JSON file
+_MAPPING_FILE = (
+    Path(__file__).parent.parent/"data"/"ipc_to_bns_mapping.json"
+)
 
 class IPCParser:
     act = ACT
 
+<<<<<<< HEAD
     def parse(self, pdf_path: Path) -> list[Section]:
         raw_text = self._extract_raw_text(pdf_path)
         toc_text, body_text = self._split_toc_and_body(raw_text)
         toc_entries = self._parse_toc(toc_text)
         return self._parse_body(body_text, toc_entries)
+=======
+    # Load the IPC → BNS mapping once during init.
+    def __init__(self):
+        with open(_MAPPING_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+
+        self._ipc_to_bns = data.get("ipc_to_bns", {})
+
+    def parse(self, pdf_path: Path) -> List[Section]:
+        """Public entry point – takes a PDF path, returns Sections."""
+        raw_text = self._extract_text(pdf_path)
+        text = self._load_act_text(raw_text)           # discard TOC
+        text = self._strip_page_numbers(text)          # lone numbers at top of pages
+        text = self._remove_editorial_marks(text)      # 1[, 2***, 3[...] etc.
+        text = self._remove_footnotes(text)            # 1. Subs. by... etc.
+        chapter_blocks = self._split_chapters(text)
+
+        sections = []
+        for ch in chapter_blocks:
+            for sec in self._split_sections(ch['text']):
+                replaced_by = self._ipc_to_bns.get(sec["section_number"],"")  # for specifc IPS Section the replaced_by is equal to BNS Section
+                sections.append(Section(
+                    act="IPC",
+                    unit_type="section",
+                    number=sec['section_number'],
+                    title=sec['title'],
+                    body=sec['body'], 
+                    status="repealed",     # Since the status is change from 'active' to 'repealed' because of BNS act
+                    
+                    metadata={
+                        "chapter": ch['num'],
+                        "chapter_title": ch['title'],
+                        "effective_date": "1860-01-01",
+                        "replaced_by":replaced_by,   # BNS section corresponding to this repealed IPC section. 
+                    }
+                ))
+        return sections
+
+    # ------------------------------------------------------------------
+    # Internal helpers (each does one job)
+    # ------------------------------------------------------------------
+>>>>>>> 0ce4b09 (feat: integrate official IPC and CrPC section mappings)
 
     @staticmethod
     def _extract_raw_text(pdf_path: Path) -> str:
