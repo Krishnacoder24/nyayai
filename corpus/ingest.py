@@ -5,7 +5,6 @@ called by scripts/ingest_corpus.py.
 
 from pathlib import Path
 
-from surya import settings
 
 from corpus.parser import parse_act
 from corpus.chunker import chunk_sections
