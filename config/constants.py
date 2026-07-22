@@ -32,3 +32,8 @@ STROKE_ALPHA = 0.9
 STROKE_WIDTH = 1.2
 
 MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50MB - generous for a scanned multi-page FIR
+
+# Router constants for ocr/router.py
+MIN_CHARS_PER_PAGE = 20
+MIN_LINES_PER_PAGE = 3
+MAX_SCANNED_INDICATORS = 1

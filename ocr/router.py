@@ -8,14 +8,15 @@ from pathlib import Path
 
 from ocr.tokens import LineSpan
 from ocr.native_extractor import NativeExtractor
+from config.constants import MIN_CHARS_PER_PAGE, MIN_LINES_PER_PAGE, MAX_SCANNED_INDICATORS
 
 
 def route(
     pdf_path: Path,
-    min_chars_per_page: int = 20,
-    min_lines_per_page: int = 3,
+    min_chars_per_page: int = MIN_CHARS_PER_PAGE,
+    min_lines_per_page: int = MIN_LINES_PER_PAGE,
     min_alphabetic_ratio: float = 0.6,
-    max_scanned_indicators: int = 1
+    max_scanned_indicators: int = MAX_SCANNED_INDICATORS
 ) -> tuple[list[LineSpan], list[int]]:
     """
     Route pages to native extraction or OCR.
@@ -62,7 +63,7 @@ def route(
             stats.get("char_count", 0) >= min_chars_per_page and
             stats.get("line_count", 0) >= min_lines_per_page and
             stats.get("alphabetic_ratio", 0) >= min_alphabetic_ratio and
-            stats.get("scanned_indicators", 3) <= max_scanned_indicators
+            stats.get("scanned_indicators", max_scanned_indicators) <= max_scanned_indicators
         )
         
         if is_native:
