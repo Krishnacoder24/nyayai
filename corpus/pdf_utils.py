@@ -34,35 +34,27 @@ def _dominant_font_size(pdf: pdfplumber.PDF) -> float:
     return statistics.median(sizes) if sizes else 0.0
 
 
-def _drop_superscript_digits(page: Page, baseline_size: float) -> Page:
+def _format_superscripts(page: Page, baseline_size: float) -> Page:
     """returns a pdfplumber page with superscript footnote-marker digits
-    filtered out, so extract_text() never sees them. the real space
-    character that already sits next to these markers in the source PDF
-    (verified directly - see SUPERSCRIPT_SIZE_RATIO's docstring) is left
-    untouched, so dropping the digit naturally collapses to a single
-    space instead of gluing two words together."""
+    replaced by bracketed digits (e.g., '1' becomes '[1]')."""
     if baseline_size <= 0:
         return page
 
-    def keep(obj: dict) -> bool:
-        if obj.get("object_type") != "char":
-            return True
-        return not (obj["text"].isdigit() and obj["size"] < baseline_size * SUPERSCRIPT_SIZE_RATIO)
+    for obj in page.chars:
+        if obj.get("object_type") == "char" and obj["text"].isdigit() and obj["size"] < baseline_size * SUPERSCRIPT_SIZE_RATIO:
+            obj["text"] = f"[{obj['text']}]"
 
-    return page.filter(keep)
+    return page
 
 
 def extract_pdf_text(pdf_path: Path) -> str:
     """
     Extracts text from every page in reading order.
-    No cleaning or parser-specific processing, other than dropping
-    superscript footnote-marker digits (see _drop_superscript_digits) -
-    those aren't real content, and leaving them in silently corrupts
-    downstream embeddings.
+    Formats superscript footnote-marker digits with brackets.
     """
     with pdfplumber.open(pdf_path) as pdf:
         baseline = _dominant_font_size(pdf)
-        pages = [_drop_superscript_digits(page, baseline).extract_text() or "" for page in pdf.pages]
+        pages = [_format_superscripts(page, baseline).extract_text() or "" for page in pdf.pages]
     return "\n".join(pages)
 
 
@@ -70,12 +62,11 @@ def extract_pdf_pages(pdf_path: Path) -> list[str]:
     """
     Returns one string per page.
     Useful when parsers need page-aware processing
-    (e.g. removing TOC or headers). Same superscript-digit filtering as
-    extract_pdf_text - see _drop_superscript_digits.
+    (e.g. removing TOC or headers). Formats superscript digits.
     """
     with pdfplumber.open(pdf_path) as pdf:
         baseline = _dominant_font_size(pdf)
-        return [_drop_superscript_digits(page, baseline).extract_text() or "" for page in pdf.pages]
+        return [_format_superscripts(page, baseline).extract_text() or "" for page in pdf.pages]
 
 
 def remove_repeated_headers(pages: list[str], threshold: float = 0.5) -> list[str]:
