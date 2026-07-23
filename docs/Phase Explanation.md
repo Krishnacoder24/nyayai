@@ -1,5 +1,14 @@
 
 
+> **Status: superseded — kept for historical record only.** This was the
+> original phase plan, written before several real decisions changed the
+> shape of the project: `WordToken` became `LineSpan`, the backend dropped
+> Redis in favor of a filesystem broker + SQLite, corpus ingestion moved
+> from `scripts/` into a proper `corpus/` package, and `api/celery_app.py`
+> became `workers/celery_app.py` in a dedicated `workers/` package. Do not
+> use this file as a reference for current file locations or the current
+> stack — see `docs/Folder_structure.md` and `docs/roadmap.md` for that.
+
 ## how the project is split
 
 doing this in phases, one git branch per phase. plan below.

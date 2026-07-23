@@ -208,8 +208,6 @@ NyayAI/
 - `test_deps.py` and `test_gpu.py` sitting at the repo root (not in
   `scripts/` or `tests/`) look like ad hoc personal debugging scripts —
   worth moving into `scripts/` or removing if they're no longer needed.
-- `main.py` at the root is unmodified `uv init` boilerplate
-  (`print("Hello from nyayai!")`) — not used by anything, safe to delete.
 - DVC (`.dvc/`, `.dvcignore`, `data.dvc`) is present but not documented
   anywhere else in the repo (README, other docs) — worth either
   documenting what it tracks and how to use it, or removing it if it's

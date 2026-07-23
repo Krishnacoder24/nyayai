@@ -1,5 +1,14 @@
 # model
 
+**status:** the inference scaffold described below (preprocess → predict →
+postprocess) is fully built and matches the real code in `model/`. The
+fine-tuning section further down describes the *planned* training
+configuration — `train/` is scaffolded but has not actually been run yet,
+so there is no fine-tuned checkpoint, no real F1 numbers, and
+`model/predict.py` currently returns all-`O` labels (no detected errors)
+for every document. Citation and entity checking are unaffected by this —
+they're pure rule-based checkers in `rules/`, not part of this ML path.
+
 ## overview
 
 the ML component of nyayai uses `law-ai/InLegalBERT` — a BERT model
@@ -233,7 +242,15 @@ errors with confidence > 0.7.
 
 ---
 
-## fine-tuning (train/)
+## fine-tuning (train/) — planned configuration, not yet executed
+
+Everything in this section describes the scaffolded design in `train/` —
+`dataset.py`, `collator.py`, `train.py`, `metrics.py`, `evaluate.py` all
+exist and are wired together correctly, but no training run has happened
+yet. Treat the hyperparameters below as the intended starting point, not
+as numbers validated by an actual run. Once training runs, this section
+should be updated with the real F1 achieved and any hyperparameters that
+changed during tuning.
 
 ### training data
 no existing public dataset for Indian legal error detection exists.

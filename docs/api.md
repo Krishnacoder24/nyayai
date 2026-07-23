@@ -3,11 +3,13 @@
 ## overview
 
 nyayai exposes a REST API built with FastAPI. PDF processing is slow
-(30-60 seconds per document) so the API uses an async job pattern —
-upload returns immediately with a job ID, the client polls for status,
-then fetches the result when done.
+(OCR + model inference can take tens of seconds) so the API uses an async
+job pattern — upload returns immediately with a job ID, the client polls
+for status, then fetches the result once done.
 
-base URL: `http://localhost:8000`
+base URL (local dev): `http://localhost:8000`
+
+**status:** implemented, no authentication yet — see "known gaps" below.
 
 ---
 
@@ -15,18 +17,25 @@ base URL: `http://localhost:8000`
 
 ```
 1. POST /upload
-   client sends PDF
-   server saves file, enqueues celery task
-   server returns job_id immediately (< 100ms)
+   client sends a PDF
+   server saves it to data/uploads/{job_id}.pdf, enqueues a Celery task
+   server returns job_id immediately
 
 2. GET /status/{job_id}
-   client polls every 2-3 seconds
-   server returns current status: queued | processing | done | failed
+   client polls (frontend polls every 300ms — see frontend/src/api.js)
+   server returns Celery's own state directly: PENDING | STARTED | SUCCESS | FAILURE | RETRY | REVOKED
 
 3. GET /result/{job_id}
-   client fetches once status = "done"
-   server returns annotated PDF URL + error list + stats
+   client fetches once status == "SUCCESS"
+   server returns the report dict + download URLs for the annotated PDF and HTML report
 ```
+
+There is **no custom job state machine** — `GET /status/{job_id}` calls
+`celery.result.AsyncResult(job_id, app=celery_app)` and returns its `.status`
+directly. The states you'll see are exactly Celery's five/six built-in states,
+not `queued`/`processing`/`done`/`failed`. There is no `stage` or `progress`
+field — Celery's result backend doesn't track sub-task progress here, so the
+client can only know "not done yet" vs. a terminal state.
 
 ---
 
@@ -34,9 +43,9 @@ base URL: `http://localhost:8000`
 
 ---
 
-### POST /upload
+### `POST /upload`
 
-upload a PDF for processing.
+Defined in `api/routes/upload.py`.
 
 **request:**
 ```
@@ -48,314 +57,353 @@ file: <pdf binary>
 **response 200:**
 ```json
 {
-  "job_id": "3f7a2b1c-...",
-  "status": "queued",
-  "message": "document queued for processing"
+  "job_id": "3f7a2b1c-9e2a-4c11-9c2e-1a2b3c4d5e6f"
 }
 ```
+(`UploadResponse` — just `job_id`, nothing else.)
 
 **response 400:**
 ```json
-{
-  "error": "invalid_file",
-  "message": "only PDF files are accepted"
-}
+{"detail": "only PDF files are accepted"}
+```
+or
+```json
+{"detail": "uploaded file is empty"}
 ```
 
 **response 413:**
 ```json
-{
-  "error": "file_too_large",
-  "message": "maximum file size is 50MB"
-}
+{"detail": "file too large (max 50MB)"}
 ```
 
-**notes:**
-- max file size: 50MB (configurable in config/settings.py)
-- only PDF accepted, validated by content type and magic bytes
-- job_id is a UUID4, used for all subsequent requests
+These are FastAPI's default `HTTPException` shape — a single `detail` string,
+not a custom `{"error": ..., "message": ...}` envelope.
+
+**validation performed:**
+- `file.content_type` must be exactly `application/pdf`
+- file size checked against `MAX_UPLOAD_BYTES` (`config/constants.py`, 50MB)
+- empty file body rejected
+
+**on success:** `job_id = str(uuid.uuid4())`, file saved via
+`services.storage.save_upload(job_id, file_bytes)`, and
+`workers.tasks.process_pdf.delay(job_id)` enqueues the Celery task.
 
 ---
 
-### GET /status/{job_id}
+### `GET /status/{job_id}`
 
-poll for job status.
+Defined in `api/routes/jobs.py`.
 
 **response 200:**
 ```json
 {
-  "job_id": "3f7a2b1c-...",
-  "status": "processing",
-  "stage": "ocr",
-  "progress": 0.35
+  "job_id": "3f7a2b1c-9e2a-4c11-9c2e-1a2b3c4d5e6f",
+  "status": "STARTED"
 }
 ```
 
-**status values:**
-
-| status | meaning |
-|---|---|
-| `queued` | task waiting for a worker |
-| `processing` | worker picked it up, running |
-| `done` | completed successfully |
-| `failed` | error during processing |
-
-**stage values (when status=processing):**
-
-| stage | meaning |
-|---|---|
-| `ocr` | extracting text from PDF pages |
-| `model` | running InLegalBERT inference |
-| `rules` | running citation + entity checks |
-| `rendering` | annotating PDF with highlights |
-
-**progress:** float 0.0 to 1.0, approximate
-
-**response 404:**
-```json
-{
-  "error": "job_not_found",
-  "message": "no job found with id 3f7a2b1c-..."
-}
-```
+`status` is one of Celery's own states (`JobStatusResponse.status` is typed
+as `Literal["PENDING", "STARTED", "SUCCESS", "FAILURE", "RETRY", "REVOKED"]`
+in `api/schemas/response.py`). There is no separate 404 handling for an
+unknown `job_id` — Celery's `AsyncResult` for an ID it has never seen
+returns `PENDING` by design, which is indistinguishable from "queued but not
+started yet." This is a known ambiguity, not a bug — worth knowing about
+before building a client that assumes `PENDING` means "definitely exists."
 
 ---
 
-### GET /result/{job_id}
+### `GET /result/{job_id}`
 
-fetch the completed result. only valid when status = "done".
+Defined in `api/routes/jobs.py`.
 
-**response 200:**
+**response 200 (job succeeded):**
 ```json
 {
-  "job_id": "3f7a2b1c-...",
-  "status": "done",
-  "annotated_pdf_url": "/outputs/3f7a2b1c/annotated.pdf",
-  "stats": {
-    "total_errors": 7,
-    "by_type": {
-      "spelling": 2,
-      "grammar": 1,
-      "citation": 3,
+  "job_id": "3f7a2b1c-9e2a-4c11-9c2e-1a2b3c4d5e6f",
+  "status": "SUCCESS",
+  "report": {
+    "source_filename": "fir_sample.pdf",
+    "total_errors": 2,
+    "errors_by_type": {
+      "citation": 1,
       "entity": 1
     },
-    "page_count": 4,
-    "processing_time_s": 38.2
+    "errors": [
+      {
+        "text": "Section 302 IPC",
+        "error_type": "citation",
+        "page_no": 1,
+        "x0": 54.0, "y0": 301.0, "x1": 210.0, "y1": 318.0,
+        "suggestion": "verify Section 302 IPC exists and is active",
+        "confidence": 0.95,
+        "bbox": [54.0, 301.0, 210.0, 318.0],
+        "highlight_color": "#FF4444"
+      }
+    ]
   },
-  "errors": [
-    {
-      "text": "Section 302 IPC",
-      "error_type": "citation",
-      "page_no": 1,
-      "bbox": [54.0, 301.0, 210.0, 318.0],
-      "suggestion": "Section 103 BNS (IPC repealed, see BNS 2023)",
-      "confidence": 0.95,
-      "highlight_color": "#FF4444"
-    },
-    {
-      "text": "Rakesh Kumar",
-      "error_type": "entity",
-      "page_no": 3,
-      "bbox": [54.0, 180.0, 190.0, 196.0],
-      "suggestion": "should be \"Ramesh Kumar\"",
-      "confidence": 0.92,
-      "highlight_color": "#AA44FF"
-    }
-  ]
+  "annotated_pdf_url": "/files/3f7a2b1c-..._annotated.pdf",
+  "report_html_url": "/files/3f7a2b1c-..._report.html",
+  "error": null
 }
 ```
 
-**response 400 (job not done yet):**
-```json
-{
-  "error": "job_not_ready",
-  "message": "job is still processing. poll /status/{job_id} first."
-}
-```
+`report` is exactly the dict returned by `renderer/report.py`'s
+`build_report()` — there is no `stats` object, no `page_count`, and no
+`processing_time_s` field; none of these are tracked anywhere in the
+pipeline currently. Colors come from `config/constants.py`'s `ERROR_COLORS`
+(`spelling` `#FFD700`, `grammar` `#FFA500`, `citation` `#FF4444`, `entity`
+`#00BFFF`).
 
-**response 404:**
+**response when job is still running (HTTP 409):**
+```json
+{"detail": "job is not finished yet (status: STARTED)"}
+```
+Any non-`SUCCESS`, non-`FAILURE` status returns `409 Conflict` with this
+message — there's no separate `job_not_ready` error code, just this detail
+string.
+
+**response when the job failed (still HTTP 200):**
 ```json
 {
-  "error": "job_not_found",
-  "message": "no job found with id 3f7a2b1c-..."
+  "job_id": "3f7a2b1c-...",
+  "status": "FAILURE",
+  "report": null,
+  "annotated_pdf_url": null,
+  "report_html_url": null,
+  "error": "<str(exception) from the Celery task>"
 }
 ```
+Note this comes back as a normal `200`, not an error status — the failure
+is communicated through the `status`/`error` fields in the body, not the
+HTTP status code.
+
+**file URLs:** both `annotated_pdf_url` and `report_html_url` are only
+populated if the corresponding file actually exists on disk
+(`services/storage.py`'s `annotated_pdf_path`/`report_html_path`), and they
+point at `/files/{job_id}_annotated.pdf` / `/files/{job_id}_report.html` —
+flat filenames under the generic static mount, not a per-job subdirectory
+and not a dedicated download endpoint.
 
 ---
 
-### GET /outputs/{job_id}/annotated.pdf
+### Files: `GET /files/{filename}`
 
-download the annotated PDF directly.
+There is **no dedicated download route**. `api/main.py` mounts
+`data/outputs/` directly as static files:
 
-**response 200:**
-```
-Content-Type: application/pdf
-Content-Disposition: attachment; filename="annotated.pdf"
-
-<pdf binary>
+```python
+app.mount("/files", StaticFiles(directory=settings.outputs_dir), name="files")
 ```
 
-**response 404:** job not found or result not ready
+So `data/outputs/{job_id}_annotated.pdf` is reachable at
+`/files/{job_id}_annotated.pdf`, and likewise for `{job_id}_report.html`.
+There's no custom `Content-Disposition` header, no auth check on this route,
+and no per-job access control — anyone who knows or receives a `job_id` can
+fetch its outputs. This is fine for local single-user use and is one of the
+things that needs to change before any real deployment (see the repo's
+GitHub issue tracker, milestone M6).
 
 ---
 
-### GET /health
+### `GET /health`
 
-system health check. useful for docker/k8s liveness probes.
+Defined in `api/routes/health.py`.
 
-**response 200:**
+**response 200 (always 200 — there is no degraded/503 state):**
 ```json
 {
   "status": "ok",
-  "qdrant": "connected",
-  "redis": "connected",
-  "model_checkpoint": "loaded",
-  "gpu_available": true
+  "qdrant": "reachable"
 }
 ```
-
-**response 503 (degraded):**
+or
 ```json
 {
-  "status": "degraded",
-  "qdrant": "unreachable",
-  "redis": "connected",
-  "model_checkpoint": "not_found",
-  "gpu_available": true
+  "status": "ok",
+  "qdrant": "unreachable"
 }
 ```
 
-degraded means the service is running but some features won't work:
-- `qdrant: unreachable` → citation checking disabled
-- `model_checkpoint: not_found` → ML error detection disabled (returns
-  no spelling/grammar errors until checkpoint is loaded)
+That's the entire response shape. There is **no** `redis` field, no
+`model_checkpoint` field, no `gpu_available` field, and no `503` response —
+`status` is hardcoded to `"ok"` regardless of Qdrant's reachability; only
+the `qdrant` field changes. The check itself just instantiates a
+`QdrantClient` and calls `get_collections()` inside a `try/except`.
+
+If `qdrant: "unreachable"`, citation checking silently returns an empty
+list rather than failing the pipeline (see `rules/citation_checker.py`) —
+this endpoint exists specifically to surface that degradation up front
+rather than only discovering it mid-analysis.
 
 ---
 
-### GET /debug/spans/{job_id}
+### `/debug/*` — not implemented
 
-**dev only — not exposed in production**
-
-returns the raw list[LineSpan] from the OCR step for a given job.
-useful for debugging OCR output before the model runs.
-
-**response 200:**
-```json
-{
-  "job_id": "3f7a2b1c-...",
-  "span_count": 89,
-  "spans": [
-    {
-      "text": "First Information Report",
-      "page_no": 0,
-      "source": "native",
-      "bbox": [54.0, 80.0, 280.0, 96.0]
-    }
-  ]
-}
-```
+`api/routes/debug.py` currently contains only a module docstring
+(`"""Development-only API routes."""`) — no actual `APIRouter`, and it
+isn't imported or mounted in `api/main.py`. There is no
+`GET /debug/spans/{job_id}` or any other debug endpoint live today. This
+is a placeholder for a planned feature, not a working route.
 
 ---
 
 ## error response shape
 
-all error responses follow the same shape:
+FastAPI's default shape is used throughout — a single `detail` field:
 
 ```json
-{
-  "error": "snake_case_error_code",
-  "message": "human readable description"
-}
+{"detail": "human readable description"}
 ```
 
-**common error codes:**
+There are no custom machine-readable error codes (`invalid_file`,
+`file_too_large`, `job_not_found`, etc.) anywhere in the codebase today.
+If you're building a client, match on HTTP status code + parse `detail` as
+a display string, not as a stable enum.
 
-| code | http status | meaning |
-|---|---|---|
-| `invalid_file` | 400 | not a PDF or corrupted |
-| `file_too_large` | 413 | exceeds 50MB limit |
-| `job_not_found` | 404 | unknown job_id |
-| `job_not_ready` | 400 | result requested before job done |
-| `processing_failed` | 500 | celery task threw an exception |
-| `internal_error` | 500 | unexpected server error |
+| situation | HTTP status |
+|---|---|
+| non-PDF content type | 400 |
+| empty file | 400 |
+| file over 50MB | 413 |
+| `/result` requested before job finished | 409 |
 
 ---
 
 ## running the API
 
-**start dependencies first:**
+**start Qdrant first** (the only external service the API needs):
 ```bash
-docker-compose up -d   # starts qdrant + redis
+docker-compose up -d qdrant
 ```
+No Redis is required — Celery uses the filesystem broker + SQLite result
+backend (see `config/settings.py` / `workers/celery_app.py`). The current
+`docker-compose.yml` still defines a `redis` service left over from an
+earlier design; it isn't used by anything and is slated for removal.
 
 **start the API:**
 ```bash
-uv run uvicorn api.main:app --reload --port 8000
+uv run uvicorn api.main:app --reload
 ```
 
-**start a celery worker:**
+**start a Celery worker — the `-Q pdf_processing` flag is mandatory:**
 ```bash
-uv run celery -A workers.celery_app worker --loglevel=info
+uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing
 ```
+A Celery worker only consumes queues it's explicitly told to listen on.
+Omitting `-Q pdf_processing` means uploaded PDFs get enqueued but never
+picked up — no error, no crash, the job just sits in `PENDING` forever.
 
-all three need to be running for the full pipeline to work.
+All three (Qdrant, API, worker) need to be running for the full pipeline
+to work end to end.
 
 ---
 
 ## configuration
 
-all API settings live in `config/settings.py` as a pydantic BaseSettings
-class, loaded from `.env`:
+Settings live in `config/settings.py` as a `pydantic_settings.BaseSettings`
+class, loaded from `.env`. The fields that matter for the API/worker layer:
 
 ```python
 class Settings(BaseSettings):
-    max_file_size_mb: int = 50
-    upload_dir: str = "data/uploads"
-    output_dir: str = "data/outputs"
-    qdrant_url: str = "http://localhost:6333"
-    redis_url: str = "redis://localhost:6379"
-    debug: bool = False
-    # surya batch sizes
-    recognition_batch_size: int = 32
-    detector_batch_size: int = 4
+    root_dir: Path
+    checkpoint_dir: Path         # model/checkpoint
+    corpus_sources_dir: Path     # corpus/sources
+    uploads_dir: Path            # data/uploads
+    outputs_dir: Path            # data/outputs
+    cache_dir: Path
+    temp_dir: Path
+
+    celery_broker_url: str = "filesystem://"
+    celery_broker_data_folder: str
+    celery_result_backend: str   # db+sqlite:///...
+
+    bert_checkpoint: str = "law-ai/InLegalBERT"
+    spacy_model: str = "en_core_web_sm"
+
+    recognition_batch_size: int = 32   # alias: RECOGNITION_BATCH_SIZE
+    detector_batch_size: int = 4       # alias: DETECTOR_BATCH_SIZE
+    torch_device: str = "cuda"         # alias: TORCH_DEVICE
+
+    qdrant_url: str = "http://localhost:6333"    # alias: QDRANT_URL
+    qdrant_collection: str = "legal_corpus"       # alias: QDRANT_COLLECTION
+    redis_url: str = "redis://localhost:6379/0"   # alias: REDIS_URL — unused, pending removal
+
+    debug: bool = True   # alias: DEBUG — currently defaults True, worth
+                          # flipping to False before any non-local deployment
 ```
 
-override any setting via `.env` file or environment variable.
+`MAX_UPLOAD_BYTES` (50MB) and `ERROR_COLORS` live separately in
+`config/constants.py`, not in `Settings`.
+
+Override any setting via `.env` or environment variables. See `.env.example`
+for the variables that matter for local dev (Qdrant URL, surya batch sizes,
+torch device).
 
 ---
 
 ## frontend integration
 
-the React frontend talks to this API via `frontend/src/api.js`:
+`frontend/src/api.js` is the real client — it does **not** use relative
+`fetch()` calls; it reads an absolute base URL:
 
 ```javascript
-// upload
-const res = await fetch('/upload', { method: 'POST', body: formData })
-const { job_id } = await res.json()
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-// poll
-const poll = setInterval(async () => {
-  const status = await fetch(`/status/${job_id}`).then(r => r.json())
-  if (status.status === 'done') {
-    clearInterval(poll)
-    fetchResult(job_id)
-  }
-}, 2000)
+export async function uploadPdf(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await fetch(`${API_BASE_URL}/upload`, { method: 'POST', body: formData })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.detail || `upload failed (${res.status})`)
+  return { jobId: data.job_id }
+}
 
-// result
-const result = await fetch(`/result/${job_id}`).then(r => r.json())
-// result.errors -> passed to HighlightOverlay.jsx
-// result.annotated_pdf_url -> passed to PdfCanvas.jsx
+export async function pollJobStatus(jobId) {
+  const res = await fetch(`${API_BASE_URL}/status/${jobId}`)
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.detail || `status check failed (${res.status})`)
+  return { status: data.status }   // Celery's real state string, e.g. "SUCCESS"
+}
 ```
+
+`App.jsx` polls every **300ms** (`POLL_INTERVAL_MS = 300`) and checks for
+the literal strings `'SUCCESS'` and `'FAILURE'` — not `'done'`/`'failed'`.
+`fetchResult()` in `api.js` reshapes the response slightly: it spreads
+`data.report` at the top level and rewrites `annotated_pdf_url` /
+`report_html_url` into absolute URLs against `API_BASE_URL`, so components
+downstream (`HighlightOverlay.jsx`, `PdfCanvas.jsx`) don't need to know the
+API's base URL themselves.
+
+CORS is currently locked to `http://localhost:5173` (Vite's default dev
+port) in `api/main.py` — this will need to change to the real frontend
+origin before deployment.
 
 ---
 
 ## output file lifecycle
 
-uploaded PDFs: `data/uploads/{job_id}.pdf`
-annotated PDFs: `data/outputs/{job_id}/annotated.pdf`
-JSON report: `data/outputs/{job_id}/report.json`
+```
+data/uploads/{job_id}.pdf
+data/outputs/{job_id}_annotated.pdf
+data/outputs/{job_id}_report.json
+data/outputs/{job_id}_report.html
+```
 
-both input and output are kept until explicitly deleted. in production,
-add a cleanup task (e.g. delete outputs older than 24 hours) to avoid
-filling disk. this is not implemented yet — add to roadmap.
+Flat filenames keyed by `job_id`, all under `services/storage.py` — no
+per-job subdirectory. Both input and output are kept indefinitely; there is
+currently **no cleanup task**. `data/uploads/` and `data/outputs/` will grow
+unbounded over time. This is a known, tracked gap (see the GitHub issue
+tracker) — not implemented yet.
+
+---
+
+## known gaps (not yet implemented)
+
+- **No authentication.** Every route is fully public — fine for local
+  single-user use, not fine once this is reachable over a network.
+- **No output cleanup task.** Uploads and outputs accumulate forever.
+- **No rate limiting.**
+- **`/debug/*` routes are stubbed, not real.**
+- **Timing middleware (`api/middleware/timing.py`) is a stub** — no
+  `X-Process-Time` header is actually added to responses yet, despite the
+  file's docstring suggesting it should be.

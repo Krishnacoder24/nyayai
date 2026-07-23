@@ -1,3 +1,14 @@
+> **Status: historical dev log, meaningfully superseded in places.** This
+> records the original phase-2 plan and reasoning. Two things drifted from
+> what's described here: (1) `citation_checker.py` and `entity_checker.py`
+> ended up living in `rules/`, not `model/`, once that package was split
+> out; (2) the single entry point described as `model/pipeline.py` was
+> superseded by `pipeline/engine.py` — `model/pipeline.py` still exists in
+> the repo today as a leftover duplicate and is dead code, tracked for
+> removal. The BIO label scheme, preprocessing, and inference design
+> described below are still accurate to the real `model/` code — see
+> `docs/model.md` for the current, verified version of that content.
+
 # phase 2 — model / error detection (`feature/model`)
 
 ## goal
