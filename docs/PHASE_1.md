@@ -1,3 +1,10 @@
+> **Status: historical dev log, not a living doc.** This records the real
+> decisions, bugs, and lessons from building the OCR pipeline. The
+> `WordToken` → `LineSpan` pivot and other lessons here are still accurate
+> to why `ocr/` looks the way it does today. For current, up-to-date OCR
+> documentation, see `docs/architecture.md`. Kept as-is rather than rewritten,
+> since the value here is the authentic record of what actually happened.
+
 # phase 1 — ocr pipeline (`feature/ocr`)
 
 ## what this phase does
