@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import UploadPage from './UploadPage'
 import PdfCanvas from './PdfCanvas'
@@ -11,38 +11,54 @@ const POLL_INTERVAL_MS = 300
 
 export default function App() {
   const [file, setFile] = useState(null)
+  const [jobId, setJobId] = useState(null)
   const [status, setStatus] = useState(null)
   const [report, setReport] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [activeErrorIndex, setActiveErrorIndex] = useState(null)
-  const [pageInfo, setPageInfo] = useState(null) // { widthPts, heightPts, displayScale }
+  const [pageInfo, setPageInfo] = useState(null) // { widthPts, heightPts, displayScale, numPages }
 
   const handleFileSelected = useCallback(async (selectedFile) => {
     setFile(selectedFile)
+    setJobId(null)
     setStatus('PENDING')
     setReport(null)
     setUploadError(null)
 
-    let jobId
     try {
       const uploadResult = await uploadPdf(selectedFile)
-      jobId = uploadResult.jobId
+      setJobId(uploadResult.jobId)
     } catch (err) {
       setStatus(null)
       setUploadError(err.message)
-      return
     }
+  }, [])
+
+  // poll job status once we have a jobId. this lives in its own effect,
+  // keyed on jobId, specifically so React can clean it up: on unmount, or
+  // if a new upload starts and jobId changes, the returned cleanup clears
+  // the interval and flips `cancelled` so any already-in-flight
+  // pollJobStatus/fetchResult response is ignored instead of calling
+  // setState after the fact. previously this setInterval was created
+  // inside the same plain async callback that did the upload, with no
+  // cleanup path at all - navigating away mid-poll left the interval
+  // running forever, still calling setStatus/setReport against state that
+  // no one was reading anymore.
+  useEffect(() => {
+    if (!jobId) return
+    let cancelled = false
 
     const poll = setInterval(async () => {
       try {
         const { status: jobStatus } = await pollJobStatus(jobId)
+        if (cancelled) return
         setStatus(jobStatus)
 
         if (jobStatus === 'SUCCESS') {
           clearInterval(poll)
           const result = await fetchResult(jobId)
-          setReport(result)
+          if (!cancelled) setReport(result)
         } else if (jobStatus === 'FAILURE') {
           clearInterval(poll)
           // fetchResult throws with the real error message on a failed job -
@@ -50,17 +66,26 @@ export default function App() {
           try {
             await fetchResult(jobId)
           } catch (err) {
-            setStatus(null)
-            setUploadError(err.message)
+            if (!cancelled) {
+              setStatus(null)
+              setUploadError(err.message)
+            }
           }
         }
       } catch (err) {
         clearInterval(poll)
-        setStatus(null)
-        setUploadError(err.message)
+        if (!cancelled) {
+          setStatus(null)
+          setUploadError(err.message)
+        }
       }
     }, POLL_INTERVAL_MS)
-  }, [])
+
+    return () => {
+      cancelled = true
+      clearInterval(poll)
+    }
+  }, [jobId])
 
   const pageErrors = useMemo(
     () => report?.errors.filter((e) => e.page_no === currentPage) ?? [],
@@ -106,7 +131,11 @@ export default function App() {
             ← Prev
           </button>
           <span className="viewer-page-label">Page {currentPage}</span>
-          <button type="button" onClick={() => setCurrentPage((p) => p + 1)}>
+          <button
+            type="button"
+            disabled={pageInfo?.numPages != null && currentPage >= pageInfo.numPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
             Next →
           </button>
         </div>
@@ -116,7 +145,6 @@ export default function App() {
         <ErrorList
           report={report}
           activeErrorIndex={activeErrorIndex}
-          currentPage={currentPage}
           onSelect={selectError}
         />
 
