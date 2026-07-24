@@ -5,7 +5,7 @@ const TYPE_LABELS = {
   entity: 'Entity consistency',
 }
 
-export default function ErrorList({ report, activeErrorIndex, currentPage, onSelect }) {
+export default function ErrorList({ report, activeErrorIndex, onSelect }) {
   return (
     <aside className="error-list">
       <div className="error-list-summary">
@@ -32,7 +32,6 @@ export default function ErrorList({ report, activeErrorIndex, currentPage, onSel
                 <span className="error-list-item-text">{error.text}</span>
                 <span className="error-list-item-meta">
                   p.{error.page_no} · {TYPE_LABELS[error.error_type] || error.error_type}
-                  {error.page_no === currentPage ? '' : ''}
                 </span>
                 {error.suggestion && <span className="error-list-item-suggestion">{error.suggestion}</span>}
               </span>
