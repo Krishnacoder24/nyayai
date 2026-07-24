@@ -56,13 +56,21 @@ def _summary_line(report: dict) -> str:
 
 def _error_row(error: dict) -> str:
     color = error.get("highlight_color") or get_hex(error["error_type"])
+    conf = error.get("confidence")
+    # a conditional can't live inside an f-string's format spec (the part
+    # after ":") - `f'{x:.2f if cond else "—"}'` raises ValueError: Invalid
+    # format specifier at runtime, on every single document that produces
+    # at least one error (confidence is a float with a 0.0 default, so this
+    # branch was always hit). compute the display string first, then drop
+    # it in as a plain value with no format spec at all.
+    conf_str = f"{conf:.2f}" if conf is not None else "—"
     return (
         "<tr>"
         f'<td><span class="swatch" style="background:{color}"></span>{_escape(error["error_type"])}</td>'
         f'<td>{error["page_no"]}</td>'
         f'<td>{_escape(error["text"])}</td>'
         f'<td>{_escape(error.get("suggestion") or "—")}</td>'
-        f'<td>{error["confidence"]:.2f if error["confidence"] is not None else "—"}</td>' # what if confidence is None? should be a float, but just in case.
+        f'<td>{conf_str}</td>'
         "</tr>"
     )
 
