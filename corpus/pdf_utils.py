@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import statistics
 
 import pdfplumber
@@ -10,14 +11,52 @@ from pdfplumber.page import Page
 # coincidence. confirmed directly against bns.pdf's character data: the
 # "1" in "...on such date1 as the Central Government..." has size 6.96
 # against a page body-text size of 11.04, vs. a real "(1)" elsewhere on
-# the same page sitting at the full 11.04. left unfiltered, "date" and
-# "date1" embed as different tokens for what's semantically the same
-# word plus an unrelated footnote marker - this ratio check catches that
-# reliably by comparing each digit's actual rendered size against the
-# page's own body-text baseline, rather than guessing from the plain
-# text string (which can't tell "date1" apart from a real word ending in
-# a digit without risking false positives on legitimate content).
+# the same page sitting at the full 11.04.
+#
+# the footnote DEFINITION block at the bottom of the page (the "1. 1st
+# day of July, 2024, except..." text that the marker actually points to)
+# is ALSO set smaller than body text (roughly 8-9pt against an 11pt body
+# in the acts checked so far) - but it isn't superscript-tiny the way the
+# in-body marker digit is. if these two "smaller than body" cases aren't
+# told apart, every digit inside the footnote text itself (dates,
+# notification numbers, section references like "3(ii)") gets
+# mis-detected as another marker and bracket-wrapped a second time,
+# corrupting the footnote text we're trying to preserve. rather than add
+# a second, narrower size ratio (fragile - it'd have to sit exactly
+# between "marker" and "footnote block" sizes for every act's PDF), the
+# two are told apart structurally: a footnote-definition block always
+# starts with a line beginning "N. " and sits in the lower portion of the
+# page. once that start line is found, everything below it counts as
+# footnote-definition text regardless of its digits' sizes, and only text
+# above it is scanned for marker digits.
 SUPERSCRIPT_SIZE_RATIO = 0.85
+
+# a footnote-definition entry looks like "1. 1st day of July, 2024,
+# except..." - digits, period, space, then real text. requires a real
+# following character (not just trailing whitespace) so a lone page
+# number doesn't get mistaken for a footnote entry's start.
+FOOTNOTE_ENTRY_START = re.compile(r'^\s*(\d{1,3})\.\s+\S')
+FOOTNOTE_NUMBER_PREFIX = re.compile(r'^\s*\d{1,3}\.\s*')
+
+# footnote blocks in the acts checked so far sit in the bottom quarter of
+# the page, but this is left generous (bottom half) since a page with
+# several stacked footnotes could push the block's start line higher -
+# false positives are still guarded against by the "smaller than body"
+# and "starts with N. " checks below, so being generous here just means
+# considering more candidate lines, not accepting bad ones. NOT yet
+# verified against every real PDF in the corpus - if a genuine footnote
+# block is ever found starting above the page's midpoint, raise this.
+FOOTNOTE_REGION_MAX_TOP_FRACTION = 0.5
+
+# how close two adjacent superscript-sized digits need to be (as a
+# fraction of character size) to be treated as one multi-digit marker
+# number ("12") rather than two separate single-digit markers ("1" then
+# "2") that happen to sit next to each other. digits within the same
+# marker sit right next to each other with no real gap; a genuine gap
+# this small basically never occurs between two unrelated markers, so
+# this stays permissive rather than risking splitting a real multi-digit
+# marker apart.
+MARKER_DIGIT_ADJACENCY_RATIO = 0.5
 
 
 def _dominant_font_size(pdf: pdfplumber.PDF) -> float:
@@ -108,8 +147,6 @@ def normalize_whitespace(text: str) -> str:
     """
     Collapses excessive whitespace while preserving paragraph breaks.
     """
-    import re
-
     text = text.replace("\r\n", "\n")
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\n{3,}", "\n\n", text)

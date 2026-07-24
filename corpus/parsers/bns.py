@@ -27,9 +27,14 @@ what the real PDF actually looks like, verified against the real file
   - almost no amendment-history noise: the entire document has exactly
     ONE footnote in it (marking the 1-July-2024 commencement date on
     section 1) and exactly ONE bracket pair in the whole body (the
-    enactment date "[25th December, 2023.]"). IPC's bracket/footnote
-    noise simply isn't a live problem for BNS yet - confirmed by
-    counting occurrences directly rather than assuming.
+    enactment date "[25th December, 2023.]"). corpus/pdf_utils.py now
+    resolves each in-body footnote marker to the actual footnote sentence
+    it denotes (pulled from that page's own footnote-definition block),
+    wrapped in {curly braces} to differentiate from normal [] brackets.
+    so the shape becomes: "on such date{1st day of July, 2024, except...}"
+    - confirmed end-to-end against a real generated PDF exercising this
+    shape. the optional footnote-prefix patterns below are written to
+    match {footnote text} format.
   - BUT: two sections break the otherwise-uniform "number. Title.—Body"
     format, found by running IPC's original template against the real
     text and checking what didn't match:
@@ -110,10 +115,12 @@ TOC_ENTRY = re.compile(
 
 # chapter headers, in both TOC and body: "CHAPTER XX\nREPEAL AND SAVINGS".
 # no letter-suffixed chapters exist in this edition (nothing's been
-# inserted yet), but the optional footnote-digit+bracket prefix is kept
-# anyway since it costs nothing and IPC needed the exact same shape once
-# its first amendment landed - cheap insurance against the next edition.
-CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
+# inserted yet), but the optional footnote prefix is kept anyway
+# since it costs nothing and IPC needed the exact same shape once its
+# first amendment landed - cheap insurance against the next edition.
+# shape is "{footnote text}[" (braced footnote sentence, then the
+# real opening bracket), matching pdf_utils's resolved-footnote output.
+CHAPTER_START = re.compile(r'\n\s*(?:\{[^\}\n]*\}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
 
 # section-start candidate, parameterised on the exact number currently
 # expected from the TOC - same TOC-guided reasoning as IPC (see ipc.py
@@ -128,8 +135,14 @@ CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]
 # IPC-style template first, that these two sections were the entire
 # gap (356/358 matched without them, 358/358 with them) - not guessed
 # up front.
+#
+# the leading optional footnote-prefix is "\{[^\}\n]*\}\s*\[" (a braced
+# chunk of arbitrary footnote text, then the real opening bracket),
+# matching what pdf_utils's resolved-footnote-marker output actually
+# looks like. this is the one section (1, via its commencement footnote)
+# where that prefix is exercised for real in this edition.
 BODY_CANDIDATE_TEMPLATE = (
-    r'(?:^|\n)\s*(?:\d{{1,3}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
+    r'(?:^|\n)\s*(?:\{{[^\}}\n]*\}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
     r'(?:[A-Za-z"\u2018\u201c][\s\S]{{0,250}}?)\.?\s*[-\u2013\u2014]'
 )
 
