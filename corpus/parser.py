@@ -1,9 +1,12 @@
 """
 router: dispatches to the correct act-specific parser. no parsing logic
-lives here - each act's document grammar differs enough (see
-parsers/base.py vs parsers/constitution.py) that a single implementation
-would just become a pile of if/else branches. add new acts by registering
-a parser class in _PARSERS, not by editing this dispatch logic.
+lives here - each act's document grammar differs enough (IPC's
+century-old amendment noise vs. the Constitution's Part -> Chapter ->
+Article structure) that a single implementation would just become a
+pile of if/else branches. per issue #26, parsers are deliberately
+independent - no shared base class or inheritance - so add new acts by
+registering a parser class in _PARSERS, not by editing this dispatch
+logic or by inheriting from another act's parser.
 """
 
 from pathlib import Path
