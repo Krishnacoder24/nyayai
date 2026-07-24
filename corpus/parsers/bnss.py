@@ -10,6 +10,14 @@ than being reimplemented here.
 approach: same TOC-guided idea as IPC/BNS - walk the TOC in order, and for
 each expected number, search FORWARD from a monotonically-advancing
 cursor for a candidate matching that exact number.
+
+footnote shape: corpus/pdf_utils.py's _format_superscripts() wraps any
+digit rendered at superscript size in its own "[...]" before this parser
+ever sees the text (verified against real character-size data - see that
+file's docstring). so a footnote-marked amendment/insertion comes through
+as "[N][body...]" - a bracketed footnote number immediately followed by
+the real opening bracket - not a bare digit glued onto the bracket. the
+optional prefixes below are written to match that shape.
 """
 
 import re
@@ -36,11 +44,16 @@ TOC_ENTRY = re.compile(
     r'(?=\n\d{1,3}\.\s|\nCHAPTER\s|\n[A-Z][a-z][^\n]*\n\d|\n\d{1,4}\n|\Z)'
 )
 
-# chapter headers, in both TOC and body
-CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
+# chapter headers, in both TOC and body. optional prefix is a bracketed
+# footnote number followed by the real opening bracket ("[N]["), matching
+# pdf_utils._format_superscripts()'s output - see top docstring.
+CHAPTER_START = re.compile(r'\n\s*(?:\[\d{1,3}\]\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
 
+# optional prefix is a bracketed footnote number followed by the real
+# opening bracket ("[N][") - matches pdf_utils._format_superscripts()'s
+# output, not a bare digit glued onto the bracket. see top docstring.
 BODY_CANDIDATE_TEMPLATE = (
-    r'(?:^|\n)\s*(?:\d{{1,3}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
+    r'(?:^|\n)\s*(?:\[\d{{1,3}}\]\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
     r'(?:[A-Za-z"\u2018\u201c][\s\S]{{0,250}}?)\.?\s*[-\u2013\u2014]'
 )
 

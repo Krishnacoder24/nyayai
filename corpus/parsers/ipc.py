@@ -19,8 +19,16 @@ what the real PDF actually looks like, verified against the real file
     listing every section number + title but with NO trailing em-dash -
     if not skipped, these look exactly like section starts.
   - amended/inserted sections are wrapped in "[...]" with a footnote
-    marker digit stuck directly in front of the bracket, e.g. "7[5. ...]"
-    - the footnote digit is not part of the section number.
+    marker digit stuck directly in front of the bracket. NOTE: this used
+    to render as a bare digit glued onto the bracket ("7[5. ...]") when
+    read via pdfplumber's plain extract_text(). corpus/pdf_utils.py's
+    _format_superscripts() now wraps any digit rendered at superscript
+    size in its own "[...]" before the text ever reaches this parser -
+    confirmed against real character-size data in bns.pdf, see that
+    file's docstring - so the shape this parser actually sees is now
+    "[7][5. ...]": the footnote marker bracketed on its own, immediately
+    followed by the real section-opening bracket. the footnote digit was
+    never part of the section number either way.
   - at least one section number is missing its period entirely
     (seen: "1[17 "Government".—...]" - no "." after "17").
   - repealed/omitted sections (13, 15, 16, 56, 58, 59, 61, 62, ...) have
@@ -55,14 +63,16 @@ TOC_ENTRY = re.compile(r'\n\s*(\d{1,3}[A-Z]{0,2})\.\s+(.+)')
 
 # chapter headers, in both TOC and body: "CHAPTER XVI" / "CHAPTER VA" (roman + optional letter).
 # inserted chapters (VA, IXA, XXA) are, like inserted sections, glued
-# directly to a footnote-digit+bracket in the body - "3[CHAPTER VA" - so
-# the same atomic optional footnote-digit+bracket unit used below is
-# needed here too. without it, this regex simply never matches those
-# three chapters at all (not even a partial match on "CHAPTER VA" minus
-# the prefix), because "\n\s*CHAPTER" doesn't allow "3[" to sit between
-# the newline and the literal text - confirmed against the real PDF,
-# where all three letter-suffixed chapters are preceded by exactly this.
-CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
+# directly to a footnote-digit+bracket in the body - was raw "3[CHAPTER VA"
+# under plain extract_text(), now "[3][CHAPTER VA" now that pdf_utils
+# wraps the superscript footnote digit in its own brackets before this
+# parser ever sees the text - so the same atomic optional unit is needed
+# here too, updated to match: a bracketed footnote number immediately
+# followed by the real opening bracket. without it, this regex simply
+# never matches those three chapters at all (not even a partial match on
+# "CHAPTER VA" minus the prefix), because "\n\s*CHAPTER" doesn't allow
+# "[3][" to sit between the newline and the literal text.
+CHAPTER_START = re.compile(r'\n\s*(?:\[\d{1,3}\]\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
 
 # template for a section-start candidate, parameterised on the EXACT
 # number currently expected from the TOC (see _parse_body). searching for
@@ -92,17 +102,22 @@ CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]
 # amount of non-greedy expansion changes what number the regex requires
 # up front.
 #
-# the optional footnote-digit + bracket combo in front is still one
-# atomic optional unit (not two independently-optional pieces) for the
-# same reason as before: a separately-optional greedy digit prefix would
-# happily "match" the leading "1" of a plain "10." as a footnote marker,
-# leaving only "0" to satisfy the number being searched for.
+# the optional footnote-bracket + real-bracket combo in front is still
+# one atomic optional unit (not two independently-optional pieces) for
+# the same reason as before: a separately-optional prefix would happily
+# "match" a stray "[1]" that has nothing to do with the section that
+# follows it, leaving the real bracket unaccounted for. updated to
+# "\[\d{1,3}\]\s*\[" (bracketed footnote number, then the real opening
+# bracket) rather than the old bare "\d{1,3}\s*\[", now that
+# pdf_utils._format_superscripts() wraps the footnote digit in its own
+# brackets before this text is ever seen here - see this file's top
+# docstring for why that changed.
 #
 # the negative lookahead after the number stops "17" from matching inside
 # "170" or "17A" - without it, searching for bare "17" could latch onto
 # the front of an unrelated longer number instead of the real one.
 BODY_CANDIDATE_TEMPLATE = (
-    r'(?:^|\n)\s*(?:\d{{1,3}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}'
+    r'(?:^|\n)\s*(?:\[\d{{1,3}}\]\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}'
     r'(?:[A-Za-z"\u2018\u201c][\s\S]{{0,250}}?)\.\s*[-\u2013\u2014]'
 )
 

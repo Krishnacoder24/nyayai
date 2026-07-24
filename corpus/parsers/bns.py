@@ -29,7 +29,14 @@ what the real PDF actually looks like, verified against the real file
     section 1) and exactly ONE bracket pair in the whole body (the
     enactment date "[25th December, 2023.]"). IPC's bracket/footnote
     noise simply isn't a live problem for BNS yet - confirmed by
-    counting occurrences directly rather than assuming.
+    counting occurrences directly rather than assuming. NOTE: that one
+    commencement footnote is exactly the character data
+    corpus/pdf_utils.py's _format_superscripts() was verified against
+    (it's what "confirmed directly against bns.pdf's character data" in
+    that file's docstring refers to) - the superscript "1" marking the
+    date now comes through as its own "[1]" rather than a bare digit
+    glued onto the word, and the optional footnote-prefix patterns below
+    are written to match that bracketed shape, not the old raw one.
   - BUT: two sections break the otherwise-uniform "number. Title.—Body"
     format, found by running IPC's original template against the real
     text and checking what didn't match:
@@ -110,10 +117,13 @@ TOC_ENTRY = re.compile(
 
 # chapter headers, in both TOC and body: "CHAPTER XX\nREPEAL AND SAVINGS".
 # no letter-suffixed chapters exist in this edition (nothing's been
-# inserted yet), but the optional footnote-digit+bracket prefix is kept
-# anyway since it costs nothing and IPC needed the exact same shape once
-# its first amendment landed - cheap insurance against the next edition.
-CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
+# inserted yet), but the optional footnote-bracket prefix is kept anyway
+# since it costs nothing and IPC needed the exact same shape once its
+# first amendment landed - cheap insurance against the next edition.
+# shape is "[N][" (bracketed footnote number, then the real opening
+# bracket), matching pdf_utils._format_superscripts()'s output, not the
+# old bare "N[" shape - see this file's top docstring.
+CHAPTER_START = re.compile(r'\n\s*(?:\[\d{1,3}\]\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
 
 # section-start candidate, parameterised on the exact number currently
 # expected from the TOC - same TOC-guided reasoning as IPC (see ipc.py
@@ -128,8 +138,14 @@ CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]
 # IPC-style template first, that these two sections were the entire
 # gap (356/358 matched without them, 358/358 with them) - not guessed
 # up front.
+#
+# the leading optional footnote-prefix is "\[\d{1,3}\]\s*\[" (bracketed
+# footnote number, then the real opening bracket), matching what
+# pdf_utils._format_superscripts() actually emits - not the old bare
+# "\d{1,3}\s*\[" shape. this is the one section (1, via its commencement
+# footnote) where that prefix is exercised for real in this edition.
 BODY_CANDIDATE_TEMPLATE = (
-    r'(?:^|\n)\s*(?:\d{{1,3}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
+    r'(?:^|\n)\s*(?:\[\d{{1,3}}\]\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
     r'(?:[A-Za-z"\u2018\u201c][\s\S]{{0,250}}?)\.?\s*[-\u2013\u2014]'
 )
 
