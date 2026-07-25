@@ -32,4 +32,3 @@ def parse_act(pdf_path: Path, act: str) -> list[Section]:
     if parser is None:
         raise ValueError(f"no parser registered for act '{act}' - add one to corpus/parsers/")
     return parser.parse(pdf_path)
-
