@@ -10,15 +10,6 @@ than being reimplemented here.
 approach: same TOC-guided idea as IPC/BNS - walk the TOC in order, and for
 each expected number, search FORWARD from a monotonically-advancing
 cursor for a candidate matching that exact number.
-
-footnote shape: corpus/pdf_utils.py resolves each in-body footnote
-marker to the actual footnote sentence it denotes (pulled from that
-page's own footnote-definition block at the bottom), wrapped in {curly
-braces} to differentiate from normal [] brackets. so a footnote-marked
-amendment/insertion comes through as "{footnote sentence}[body...]" -
-a braced chunk of arbitrary footnote text immediately followed by the
-real opening bracket. the optional prefixes below are written to match
-that shape.
 """
 
 import re
@@ -45,17 +36,11 @@ TOC_ENTRY = re.compile(
     r'(?=\n\d{1,3}\.\s|\nCHAPTER\s|\n[A-Z][a-z][^\n]*\n\d|\n\d{1,4}\n|\Z)'
 )
 
-# chapter headers, in both TOC and body. optional prefix is a braced
-# chunk of arbitrary footnote text followed by the real opening bracket
-# ("{footnote text}["), matching pdf_utils's resolved-footnote-marker
-# output - see top docstring.
-CHAPTER_START = re.compile(r'\n\s*(?:\{[^\}\n]*\}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
+# chapter headers, in both TOC and body
+CHAPTER_START = re.compile(r'\n\s*(?:\d{1,3}\s*\[)?\s*CHAPTER\s+([IVXLCDM]+[A-Z]?)\s*\n\s*([^\n]*)')
 
-# optional prefix is a braced chunk of arbitrary footnote text
-# followed by the real opening bracket ("{footnote text}[") - matches
-# pdf_utils's resolved-footnote-marker output. see top docstring.
 BODY_CANDIDATE_TEMPLATE = (
-    r'(?:^|\n)\s*(?:\{{[^\}}\n]*\}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
+    r'(?:^|\n)\s*(?:\d{{1,3}}\s*\[|\[)?\s*{number}(?![A-Za-z0-9])[\s.]{{1,3}}[-\u2013\u2014]?\s*'
     r'(?:[A-Za-z"\u2018\u201c][\s\S]{{0,250}}?)\.?\s*[-\u2013\u2014]'
 )
 

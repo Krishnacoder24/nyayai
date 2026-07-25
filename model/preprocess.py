@@ -20,6 +20,19 @@ from config.settings import settings
 from config.constants import MAX_TOKENS, CHUNK_STRIDE
 CHECKPOINT = settings.bert_checkpoint 
 
+# separate cache from model/predict.py's — this tokenizer is only used
+# here to build chunks, before we even know if we'll run the ML model.
+# keeping the two caches independent avoids a circular import (predict.py
+# already imports Chunk from this file).
+_CACHED_TOKENIZER = None
+
+
+def _get_tokenizer():
+    global _CACHED_TOKENIZER
+    if _CACHED_TOKENIZER is None:
+        _CACHED_TOKENIZER = AutoTokenizer.from_pretrained(CHECKPOINT)
+    return _CACHED_TOKENIZER
+
 
 @dataclass
 class Chunk:
@@ -37,7 +50,7 @@ def build_chunks(spans: list[LineSpan]) -> list[Chunk]:
     each chunk fits within MAX_TOKENS including [CLS] and [SEP].
     chunks overlap by STRIDE tokens so nothing at a boundary is missed.
     """
-    tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
+    tokenizer = _get_tokenizer()
 
     # step 1: tokenize each span individually and record which span
     # each token came from. we don't chunk yet, just flatten everything.

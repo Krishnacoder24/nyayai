@@ -35,7 +35,21 @@ def _checkpoint_exists() -> bool:
     return os.path.isfile(os.path.join(CHECKPOINT_DIR, "config.json"))
 
 
+# module-level cache so the (fine-tuned or base) InLegalBERT weights and
+# tokenizer only get loaded from disk once per process, not once per
+# document. a Celery worker handles many documents over its lifetime —
+# without this, every single upload paid the full model-load cost again.
+_CACHED_MODEL = None
+_CACHED_TOKENIZER = None
+_CACHED_DEVICE = None
+
+
 def _load_model_and_tokenizer():
+    global _CACHED_MODEL, _CACHED_TOKENIZER, _CACHED_DEVICE
+
+    if _CACHED_MODEL is not None:
+        return _CACHED_MODEL, _CACHED_TOKENIZER, _CACHED_DEVICE
+
     device = _get_device()
 
     if _checkpoint_exists():
@@ -60,6 +74,7 @@ def _load_model_and_tokenizer():
     model.to(device)
     model.eval()  # never skip this — eval mode disables dropout and halves memory vs train mode
 
+    _CACHED_MODEL, _CACHED_TOKENIZER, _CACHED_DEVICE = model, tokenizer, device
     return model, tokenizer, device
 
 

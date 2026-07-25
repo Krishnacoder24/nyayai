@@ -1,7 +1,3 @@
-# qdrant + redis only. the app itself (api/, workers/) runs on the host via
-# `uv run`, not in a container - this just gives it the two stateful
-# services it needs to talk to on localhost.
-
 services:
   qdrant:
     image: qdrant/qdrant:v1.15.5

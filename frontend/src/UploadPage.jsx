@@ -1,14 +1,35 @@
 import { useRef, useState } from 'react'
 
+// `file.type` alone isn't reliable: it's just OS/browser-reported
+// metadata, not a property of the actual bytes. some browsers leave it
+// blank for certain drag-and-drop sources, and it's trivially wrong if a
+// file's been renamed. this checks the extension as a fallback trigger,
+// then confirms with the real PDF magic number ("%PDF-") from the file's
+// first bytes - that's what actually determines whether this is a PDF.
+async function isPdfFile(file) {
+  if (!file) return false
+
+  const hasPdfMime = file.type === 'application/pdf'
+  const hasPdfExtension = file.name?.toLowerCase().endsWith('.pdf') ?? false
+  if (!hasPdfMime && !hasPdfExtension) return false
+
+  try {
+    const header = await file.slice(0, 5).text()
+    return header === '%PDF-'
+  } catch {
+    return false
+  }
+}
+
 export default function UploadPage({ onFileSelected, status, error }) {
   const inputRef = useRef(null)
   const [isDragOver, setIsDragOver] = useState(false)
 
   const busy = status === 'PENDING' || status === 'STARTED'
 
-  function handleFiles(fileList) {
+  async function handleFiles(fileList) {
     const file = fileList?.[0]
-    if (file && file.type === 'application/pdf') {
+    if (file && (await isPdfFile(file))) {
       onFileSelected(file)
     }
   }
