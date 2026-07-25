@@ -18,12 +18,12 @@ per-document cost both matter.
 |---|---|
 | OCR (`ocr/`) | ✅ done |
 | Model scaffold (`model/`) | ✅ done — no fine-tuned weights yet, returns all-`O` labels |
-| Corpus (`corpus/`) | 🟡 infra done (schemas, chunker, embeddings, uploader, search) — act-specific parsers in progress |
+| Corpus (`corpus/`) | ✅ done - all parsers updated to use their specific pdf structure |
 | Rules (`rules/`) | ✅ done — see known limitations below |
 | Pipeline (`pipeline/`) | ✅ done |
 | Renderer (`renderer/`) | ✅ done |
 | API + workers (`api/`, `workers/`, `services/`) | ✅ done |
-| Frontend (`frontend/`) | 🟡 scaffolded — running against mock data, not yet wired to the real API |
+| Frontend (`frontend/`) | 🟡 broken |
 | Fine-tuning (`train/`) | ⬜ not started |
 
 
