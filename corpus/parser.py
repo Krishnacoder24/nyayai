@@ -16,15 +16,25 @@ from corpus.parsers.ipc import IPCParser
 from corpus.parsers.bns import BNSParser
 from corpus.parsers.bnss import BNSSParser
 from corpus.parsers.cpc import CPCParser
-# from corpus.parsers.constitution import ConstitutionParser
+from corpus.parsers.crpc import CRPCParser
+from corpus.parsers.constitution import ConstitutionParser
 
 _PARSERS = {
     "IPC": IPCParser(),
     "BNS": BNSParser(),
     "BNSS": BNSSParser(),
     "CPC": CPCParser(),
-    # "CONSTITUTION": ConstitutionParser(),
+    "CRPC": CRPCParser(),
+    "CONSTITUTION": ConstitutionParser(),
 }
+
+#anything that needs to know "which acts can actually be parsed right now"
+# (e.g. scripts/generate_data.py) should read this instead of keeping
+# its own separate list that could drift out of sync as acts get added.
+
+
+SUPPORTED_ACTS = list(_PARSERS.keys())
+
 
 
 def parse_act(pdf_path: Path, act: str) -> list[Section]:
