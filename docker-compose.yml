@@ -1,6 +1,17 @@
 services:
   qdrant:
-    image: qdrant/qdrant:v1.15.5
+    # matches qdrant-client==1.17.1 in pyproject.toml (client/server
+    # minor versions must stay within 1 of each other). bumped from
+    # v1.15.5 - NOT a safe in-place upgrade path: Qdrant removed RocksDB
+    # in favor of Gridstore in v1.17, and a direct v1.15.x -> v1.17.x
+    # upgrade of EXISTING storage is explicitly unsupported (one minor
+    # version at a time is required, or the storage volume is left
+    # mid-migration and unreadable). this bump is only safe alongside
+    # wiping qdrant_storage and re-ingesting from scratch:
+    #   docker compose down -v   (removes the volume too, not just the container)
+    #   docker compose up -d
+    #   uv run python scripts/ingest_corpus.py --all
+    image: qdrant/qdrant:v1.17.1
     container_name: nyayai-qdrant
     restart: unless-stopped
     ports:
