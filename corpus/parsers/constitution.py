@@ -62,11 +62,37 @@ what the real PDF actually looks like, verified against the real file
     real, wrong article number that would otherwise silently leak into
     the corpus. fixed by re-extracting words WITH each word's own font
     size attached (`extract_words(extra_attrs=["size"])`, which makes
-    pdfplumber word-break wherever the size changes) and dropping any
-    word whose size is under 70% of the document's dominant body size -
-    tight enough to only catch true superscript markers (~58% of body
-    size in this PDF) without also catching the margin note's own font
-    (80% of body size, deliberately preserved).
+    pdfplumber word-break wherever the size changes) and treating any
+    word whose size is under 70% of the document's dominant body size
+    as a marker rather than real text - tight enough to only catch true
+    superscript markers (~58% of body size in this PDF, footnote
+    reference numbers at the page bottom even smaller, ~47%) without
+    also catching the margin note's own font (80% of body size,
+    deliberately preserved).
+  - markers are resolved to their actual footnote text and kept inline
+    as "{resolved text}", same convention as IPC/BNS/CPC, rather than
+    silently dropped - e.g. article 1's stored body includes "{Subs. by
+    the Constitution (Seventh Amendment) Act, 1956, s. 2, for cl.
+    (2).}" right where that marker appeared. footnote DEFINITIONS live
+    in the same bottom-of-page region located for footnote-stripping
+    (see FOOTNOTE_ROW_START below) - parsed per page via
+    _extract_footnotes(), keyed by their own reference number. CAUTION:
+    a marker near the top of a page can reference a footnote defined at
+    the bottom of the PREVIOUS page, not its own - confirmed directly:
+    article 370's own insertion marker resolves to a footnote physically
+    printed at the bottom of the page before it. handled by carrying
+    each page's footnote dict forward as a fallback for the next page's
+    markers (see prev_page_footnotes in parse()/_page_columns()). a
+    marker that resolves to nothing on either page falls back to a bare
+    "{number}", same as IPC's own fallback. one asymmetry worth noting:
+    a marker sitting BEFORE an article's own number (explaining why that
+    provision was inserted, e.g. article 370's) gets consumed as part of
+    the article-start match itself and so never lands inside the stored
+    `body` - only markers appearing INSIDE an article's body text (by
+    far the more common case, and the one that actually explains a
+    substituted clause) are preserved. this mirrors IPC's own template,
+    which consumes the same kind of leading footnote as part of its
+    match prefix rather than storing it.
   - some articles are numbered with a "*[" or "[" prefix (denoting text
     substituted/inserted by amendment, sometimes with a footnote-number
     prefix too, e.g. "{1}[370. (1) Notwithstanding..." for Jammu &
@@ -170,15 +196,21 @@ PART_HEADER_START = re.compile(r'^(?:\{[^\}\n]*\}\s*\[)?\s*PART\s+([IVXLCDM]+[A-
 # - the optional `\s?` after the first letter absorbs that.
 CHAPTER_START = re.compile(r'\n\s*(?:\{[^\}\n]*\}\s*\[)?\s*C\s?HAPTER\s+([IVXLCDM]+[A-Z]?)\.?\s*[-\u2013\u2014]\s*([^\n]+)')
 
-# article-start candidate: optional "*"/"[" prefix (amendment-inserted
-# text), the number (with an optional letter suffix, e.g. 2A, 371J),
-# then ". " - deliberately generic since there's no TOC here to search
-# for a SPECIFIC expected number the way IPC/BNS/CPC do (see top
-# docstring on why this document can't be TOC-guided). validated
-# end-to-end instead: the full sequence of matches this produces comes
-# out in strictly non-decreasing numeric order across all 458 matches,
-# which a false-positive match almost certainly would have broken.
-ARTICLE_START = re.compile(r'^[*\[]{0,2}\s*(\d{1,3}[A-Z]{0,2})\.\s')
+# article-start candidate: optional resolved-footnote block (see
+# _extract_footnotes / MARKER_SIZE_RATIO below - a marker sitting
+# directly in front of an article number, e.g. the reference for why
+# article 370 carries "(1) Notwithstanding..." as inserted text, now
+# gets resolved to "{footnote text}" rather than dropped, so the article
+# pattern has to tolerate that prefix same as IPC/BNS/CPC's own
+# convention), then optional "*"/"[" (amendment-inserted text), the
+# number (with an optional letter suffix, e.g. 2A, 371J), then ". " -
+# deliberately generic since there's no TOC here to search for a
+# SPECIFIC expected number the way IPC/BNS/CPC do (see top docstring on
+# why this document can't be TOC-guided). validated end-to-end instead:
+# the full sequence of matches this produces comes out in strictly
+# non-decreasing numeric order across all matches, which a
+# false-positive match almost certainly would have broken.
+ARTICLE_START = re.compile(r'^(?:\{[^\}]*\}\s*)?[*\[]{0,2}\s*(\d{1,3}[A-Z]{0,2})\.\s')
 
 # a genuinely repealed/omitted article's entire body IS the stub notice
 # - e.g. "[Sikkim to be associated with the Union.] Rep. by the
@@ -219,6 +251,12 @@ MARKER_SIZE_RATIO = 0.7   # below this fraction of body size = footnote marker, 
 # collide with one).
 FOOTNOTE_ROW_START = re.compile(r'^\d{1,3}\s?[A-Za-z"\u2018\u201c]')
 
+# same shape as FOOTNOTE_ROW_START, but capturing the reference number
+# and the rest of the text separately - used once a row is already
+# confirmed to be a footnote-definition start, to actually build the
+# {number: text} lookup (see _extract_footnotes).
+FOOTNOTE_ENTRY = re.compile(r'^(\d{1,3})\s?(.*)$')
+
 
 class ConstitutionParser:
     act = ACT
@@ -228,10 +266,12 @@ class ConstitutionParser:
             baseline = self._document_baseline(pdf)
             body_lines: list[tuple[int, float, str]] = []   # (page_idx, top, text)
             margin_blocks: list[tuple[int, float, str]] = []  # (page_idx, top, text)
+            prev_page_footnotes: dict[str, str] = {}
             for page_idx, page in enumerate(pdf.pages):
-                margin, body = self._page_columns(page, baseline, page_idx)
+                margin, body, page_footnotes = self._page_columns(page, baseline, page_idx, prev_page_footnotes)
                 margin_blocks.extend((page_idx, top, text) for top, text in margin)
                 body_lines.extend((page_idx, top, text) for top, text in body)
+                prev_page_footnotes = page_footnotes
 
         body_lines = self._trim_before_body_start(body_lines)
         return self._build_sections(body_lines, margin_blocks)
@@ -265,11 +305,46 @@ class ConstitutionParser:
             rows.append(current)
         return rows
 
+    @staticmethod
+    def _extract_footnotes(raw_words: list[dict], footnote_start_top: float | None) -> dict[str, str]:
+        """builds a {reference_number: resolved_text} lookup from the
+        UNFILTERED words at/after footnote_start_top on one page (the
+        footnote region located by _page_columns). mirrors the same
+        "N text" shape as FOOTNOTE_ROW_START/FOOTNOTE_ENTRY, with
+        continuation lines (anything not starting a fresh entry)
+        appended to whichever entry is currently open."""
+        if footnote_start_top is None:
+            return {}
+
+        footnote_words = [w for w in raw_words if w["top"] >= footnote_start_top]
+        rows = ConstitutionParser._group_words_into_rows(footnote_words)
+        rows.sort(key=lambda row: min(w["top"] for w in row))
+
+        footnotes: dict[str, str] = {}
+        current_number = None
+        current_parts: list[str] = []
+        for row in rows:
+            row = sorted(row, key=lambda w: w["x0"])
+            text = " ".join(w["text"] for w in row)
+            if FOOTNOTE_ROW_START.match(text) and not ARTICLE_START.match(text):
+                if current_number is not None:
+                    footnotes[current_number] = " ".join(current_parts).strip()
+                entry_match = FOOTNOTE_ENTRY.match(text)
+                current_number, current_parts = entry_match.group(1), [entry_match.group(2)]
+            elif current_number is not None:
+                current_parts.append(text)
+        if current_number is not None:
+            footnotes[current_number] = " ".join(current_parts).strip()
+
+        return footnotes
+
     @classmethod
-    def _page_columns(cls, page, baseline: float, page_idx: int) -> tuple[list[tuple[float, str]], list[tuple[float, str]]]:
-        """returns (margin_rows, body_rows) for one page, each a list of
-        (top, text). see top docstring for the page-parity rule and the
-        superscript-marker-size filter."""
+    def _page_columns(
+        cls, page, baseline: float, page_idx: int, prev_page_footnotes: dict[str, str]
+    ) -> tuple[list[tuple[float, str]], list[tuple[float, str]], dict[str, str]]:
+        """returns (margin_rows, body_rows, this_page's_footnotes), each
+        of the first two a list of (top, text). see top docstring for
+        the page-parity rule and the superscript-marker-size filter."""
         margin_left = page_idx % 2 == 1  # odd pdf index -> margin on left, even -> right
 
         raw_words = page.extract_words(extra_attrs=["size"])
@@ -292,9 +367,32 @@ class ConstitutionParser:
                 footnote_start_top = top
                 break
 
-        words = [w for w in raw_words if w["size"] >= baseline * MARKER_SIZE_RATIO]
-        if footnote_start_top is not None:
-            words = [w for w in words if w["top"] < footnote_start_top]
+        this_page_footnotes = cls._extract_footnotes(raw_words, footnote_start_top)
+
+        # a marker near the top of a page can reference a footnote
+        # defined at the BOTTOM OF THE PREVIOUS PAGE, not this one -
+        # confirmed directly: article 370's own reference marker
+        # resolves to a footnote physically printed at the bottom of
+        # the page before it, not its own page. this page's own
+        # footnotes take priority; falling back to the previous page's
+        # only when this page doesn't define that number itself.
+        combined_footnotes = {**prev_page_footnotes, **this_page_footnotes}
+
+        words = []
+        for w in raw_words:
+            if footnote_start_top is not None and w["top"] >= footnote_start_top:
+                continue  # this word belongs to the footnote definition itself, already captured above
+            if w["size"] >= baseline * MARKER_SIZE_RATIO:
+                words.append(w)
+                continue
+            # small-sized word below a page: either a genuine footnote
+            # reference marker (pure digits - resolve it inline, same
+            # {text} convention as IPC/BNS/CPC) or some other tiny
+            # rendering artifact (dropped, same as before).
+            stripped_text = w["text"].strip()
+            if stripped_text.isdigit():
+                resolved = combined_footnotes.get(stripped_text)
+                words.append({**w, "text": f"{{{resolved}}}" if resolved else f"{{{stripped_text}}}"})
         rows = cls._group_words_into_rows(words)
 
         margin_out: list[tuple[float, str]] = []
@@ -347,7 +445,7 @@ class ConstitutionParser:
         if expecting:
             margin_out.append((start_margin_top, " ".join(cur_margin)))
 
-        return margin_out, body_out
+        return margin_out, body_out, this_page_footnotes
 
     # -- document-level assembly ----------------------------------------------------
 

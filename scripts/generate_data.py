@@ -1,9 +1,20 @@
 """
 generates synthetic training data for NyayAI's token classifier by deliberately
-corrupting real, verified legal text pulled from real PDFs.
+corrupting real, verified legal text pulled from the parsed corpus.
 
-Supports multiple PDFs across legal domains (IPC, BNS, BNSS, Constitution, CPC, etc.)
-Groups OCR lines into paragraphs for context. Applies realistic legal errors.
+Uses the actual act-specific parsers (corpus/parsers/ipc.py, bns.py, bnss.py,
+...) via corpus/parser.py's parse_act(), NOT raw OCR text - a parsed
+Section's body already has running headers, the table of contents, and
+footnote junk stripped out (see corpus/pdf_utils.py), so there's nothing
+left to heuristically re-clean the way raw OCR extraction would need.
+This also means the generator automatically scopes itself to whichever
+acts actually have a working parser right now (corpus.parser.SUPPORTED_ACTS)
+- it won't silently try to train on an act's PDF that has no parser yet,
+the way globbing for any *.pdf under a directory would.
+
+Groups each Section's body into a training paragraph directly - one real,
+numbered section of the Act per paragraph, not a heuristically-guessed
+OCR paragraph boundary. Applies realistic legal errors.
 
 Corruption order matters and is NOT arbitrary:
   1. GRAM first - grammar corruptions (dropping/duplicating a word) change
@@ -24,6 +35,7 @@ Labeling convention:
 
 Usage:
     uv run python scripts/generate_data.py --corpus corpus/sources/ --out data/training
+    uv run python scripts/generate_data.py --corpus corpus/sources/ipc/ipc.pdf --act IPC --out data/training
 """
 
 import argparse
@@ -38,7 +50,8 @@ from typing import List, Tuple, Optional, Dict, Any, Set
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 
-from ocr.pipeline import extract
+from corpus.parser import parse_act, SUPPORTED_ACTS
+from corpus.schemas import Section
 from model.schemas import LABELS
 from rules.citation_checker import CITATION_PATTERNS
 
@@ -90,16 +103,6 @@ class GeneratorConfig:
         "notwithstanding": ["provided", "despite"],
         "subject": ["provided", "notwithstanding"],
     })
-    
-    metadata_patterns: List[str] = field(default_factory=lambda: [
-        r"^Page \d+",
-        r"^www\.",
-        r"\.(com|org|in|gov|pdf)$",
-        r"^Government of",
-        r"^[A-Z]{3,}$",
-        r"^\d+$",
-        r"^\d+ of \d+$",
-    ])
 
 
 # Global config instance
@@ -108,8 +111,12 @@ CONFIG = GeneratorConfig()
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--corpus", type=Path, required=True, 
-                       help="path to corpus directory containing IPC/, BNS/, etc. or specific PDF")
+    parser.add_argument("--corpus", type=Path, required=True,
+                       help="path to corpus/sources/ (expects <act>/ subdirs, e.g. ipc/, bns/, bnss/) "
+                            "or a single PDF file (requires --act)")
+    parser.add_argument("--act", type=str, default=None,
+                       help="required when --corpus points to a single PDF file - which act it is "
+                            "(must be one of corpus.parser.SUPPORTED_ACTS)")
     parser.add_argument("--out", type=Path, default=Path("data/training"))
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--train-split", type=float, default=0.8)
@@ -142,81 +149,141 @@ def main():
         
         CONFIG = GeneratorConfig(**{**CONFIG.__dict__, "corruption_weights": weights})
 
-    # Load all PDFs from corpus
-    pdf_paths = []
+    # Figure out which (act, pdf_path) pairs to parse. Single-file mode
+    # needs an explicit --act since a PDF's filename alone doesn't
+    # reliably tell us which act it is. Directory mode auto-discovers
+    # one PDF per act under SUPPORTED_ACTS - the SAME registry
+    # corpus/parser.py itself uses, so this script never tries to
+    # "parse" an act that doesn't actually have a parser yet (unlike
+    # the old raw-PDF-glob approach, which would happily hand ANY *.pdf
+    # under the directory to ocr.pipeline.extract regardless of whether
+    # a real parser existed for it).
+    acts_to_process: List[Tuple[str, Path]] = []
     if args.corpus.is_file():
-        pdf_paths = [args.corpus]
+        if not args.act:
+            parser.error("--act is required when --corpus points to a single PDF file")
+        act = args.act.strip().upper()
+        if act not in SUPPORTED_ACTS:
+            parser.error(f"--act '{args.act}' has no registered parser. Supported: {SUPPORTED_ACTS}")
+        acts_to_process = [(act, args.corpus)]
     else:
-        for pdf in args.corpus.rglob("*.pdf"):
-            pdf_paths.append(pdf)
+        for act in SUPPORTED_ACTS:
+            pdf_path = _find_pdf_for_act(args.corpus, act)
+            if pdf_path is None:
+                print(f"  skipping {act}: no PDF found under {args.corpus / act.lower()}/")
+                continue
+            acts_to_process.append((act, pdf_path))
 
-    print(f"Found {len(pdf_paths)} PDF files:")
-    for pdf in pdf_paths[:5]:
-        print(f"  - {pdf}")
-    if len(pdf_paths) > 5:
-        print(f"  ... and {len(pdf_paths) - 5} more")
+    print(f"Found {len(acts_to_process)} act(s) to process:")
+    for act, pdf_path in acts_to_process:
+        print(f"  - {act}: {pdf_path}")
 
-    # Extract and build paragraphs
+    # Parse each act and build paragraphs directly from Section bodies -
+    # no OCR, no heuristic paragraph-boundary guessing. See
+    # _build_paragraphs_from_sections's docstring for why.
     paragraphs = []
     pdfs_used = []
-    for i, pdf_path in enumerate(pdf_paths):
-        print(f"Processing {i+1}/{len(pdf_paths)}: {pdf_path.name}")
+    for act, pdf_path in acts_to_process:
+        print(f"Processing {act}: {pdf_path.name}")
         try:
-            spans = extract(pdf_path)
-            new_paragraphs = _build_paragraphs(spans)
+            sections = parse_act(pdf_path, act)
+            new_paragraphs = _build_paragraphs_from_sections(sections)
             if new_paragraphs:
                 paragraphs.extend(new_paragraphs)
-                pdfs_used.append(str(pdf_path))
-                print(f"  Extracted {len(new_paragraphs)} paragraphs")
+                pdfs_used.append({
+                    "act": act,
+                    "pdf": str(pdf_path),
+                    "sections_parsed": len(sections),
+                    "paragraphs_used": len(new_paragraphs),
+                })
+                print(f"  Parsed {len(sections)} sections -> {len(new_paragraphs)} usable paragraphs")
         except Exception as e:
-            print(f"  ERROR processing {pdf_path.name}: {e}")
+            print(f"  ERROR processing {act} ({pdf_path.name}): {e}")
             continue
 
     print(f"\nTotal paragraphs extracted: {len(paragraphs)}")
 
-    # Generate clean windows from all paragraphs (no corruption)
-    clean_windows = []
-    for para in paragraphs:
-        windows = _build_windows(para)
-        clean_windows.extend(windows)
-    
-    print(f"Built {len(clean_windows)} clean windows")
-
-    # Generate examples
-    examples = []
-    skipped = 0
-    for window in clean_windows:
-        new_words, new_labels = _generate_example_from_clean_window(window)
-        if not args.no_validate:
-            if _validate_example(new_words, new_labels):
-                examples.append((new_words, new_labels))
-            else:
-                skipped += 1
-        else:
-            examples.append((new_words, new_labels))
-
-    if skipped > 0:
-        print(f"Skipped {skipped} invalid examples")
-
-    # Ensure minimum examples and balance using regeneration
-    if len(examples) < args.min_examples:
-        print(f"Warning: Only {len(examples)} examples generated. Expected at least {args.min_examples}.")
-        print("Consider adding more PDFs or reducing filtering.")
-
-    # Rebalance using regeneration instead of duplication
-    examples = _rebalance_with_regeneration(examples, clean_windows, args.min_examples, args.no_validate)
-
-    # Shuffle and split
-    random.shuffle(examples)
-    n = len(examples)
-    n_train = int(n * args.train_split)
-    n_val = int(n * args.val_split)
-
-    splits = {
-        "train": examples[:n_train],
-        "val": examples[n_train:n_train + n_val],
-        "test": examples[n_train + n_val:],
+    # split at the PARAGRAPH level, before any window is ever built - not
+    # at the individual-example level after the fact.
+    #
+    # windows overlap by 50% (window_stride=64 against window_size=128),
+    # and were previously pooled together across ALL sections before
+    # being shuffled and sliced into train/val/test. that meant two
+    # windows sharing most of their words could land on opposite sides
+    # of the split - and the rebalancer could regenerate a "test"
+    # example by resampling a window majority-overlapping with something
+    # already in "train", via its own global clean_windows pool. either
+    # way, the model could see most of a held-out example's actual
+    # content during training, which would quietly inflate
+    # train/evaluate.py's eval numbers without meaning anything about
+    # real generalization.
+    #
+    # splitting the PARAGRAPHS first closes this off structurally: since
+    # a paragraph is one whole Section body, and windows are only ever
+    # built from paragraphs already committed to one split, no window
+    # generated for train can share source text with a window in val or
+    # test. windowing, corruption, validation, and rebalancing all then
+    # run independently per split, using only that split's own pool -
+    # rebalancing against the global pool would just reopen the same
+    # leak through regeneration instead.
+    #
+    # split sizes end up approximately (not exactly) 80/10/10 by example
+    # count, since longer sections produce more windows than shorter
+    # ones - that's the correct tradeoff for avoiding leakage over
+    # hitting an exact ratio.
+    random.shuffle(paragraphs)
+    n_paragraphs = len(paragraphs)
+    n_train_p = int(n_paragraphs * args.train_split)
+    n_val_p = int(n_paragraphs * args.val_split)
+    paragraph_splits = {
+        "train": paragraphs[:n_train_p],
+        "val": paragraphs[n_train_p:n_train_p + n_val_p],
+        "test": paragraphs[n_train_p + n_val_p:],
     }
+    split_fractions = {
+        "train": args.train_split,
+        "val": args.val_split,
+        "test": max(0.0, 1 - args.train_split - args.val_split),
+    }
+
+    splits = {}
+    total_skipped = 0
+    for split_name, split_paragraphs in paragraph_splits.items():
+        clean_windows = []
+        for para in split_paragraphs:
+            clean_windows.extend(_build_windows(para))
+
+        examples = []
+        skipped = 0
+        for window in clean_windows:
+            new_words, new_labels = _generate_example_from_clean_window(window)
+            if not args.no_validate:
+                if _validate_example(new_words, new_labels):
+                    examples.append((new_words, new_labels))
+                else:
+                    skipped += 1
+            else:
+                examples.append((new_words, new_labels))
+        total_skipped += skipped
+
+        # per-type target scales with this split's share of
+        # --min-examples, so val/test (typically 10% each) aren't held
+        # to the same absolute per-type target as train - floor of 20
+        # so a small split still gets SOME rebalancing rather than none.
+        split_min = max(20, round(args.min_examples * split_fractions[split_name]))
+        examples = _rebalance_with_regeneration(examples, clean_windows, split_min, args.no_validate)
+        random.shuffle(examples)
+        splits[split_name] = examples
+
+        print(f"  {split_name}: {len(split_paragraphs)} sections -> {len(clean_windows)} windows -> {len(examples)} examples")
+
+    if total_skipped > 0:
+        print(f"Skipped {total_skipped} invalid examples (across all splits)")
+
+    total_examples = sum(len(ex) for ex in splits.values())
+    if total_examples < args.min_examples:
+        print(f"Warning: Only {total_examples} total examples generated. Expected at least {args.min_examples}.")
+        print("Consider adding more PDFs or reducing filtering.")
 
     # Write and report
     args.out.mkdir(parents=True, exist_ok=True)
@@ -243,79 +310,48 @@ def main():
         _generate_manifest(args, pdfs_used, stats, splits, checksums)
 
 
-def _build_paragraphs(spans: List[Any]) -> List[str]:
-    """Group OCR spans into coherent paragraphs using heuristics."""
+def _find_pdf_for_act(corpus_dir: Path, act: str) -> Optional[Path]:
+    """finds the source PDF for a given act, following this project's
+    corpus/sources/<act>/ convention (see bns.py's docstring, and
+    test_parser.py's corpus/sources/ipc/ipc.pdf). picks the first .pdf
+    found if there's more than one - each act is expected to have
+    exactly one source PDF."""
+    act_dir = corpus_dir / act.lower()
+    if not act_dir.is_dir():
+        return None
+    pdfs = sorted(act_dir.glob("*.pdf"))
+    return pdfs[0] if pdfs else None
+
+
+def _build_paragraphs_from_sections(sections: List[Section]) -> List[str]:
+    """turns parsed Section bodies directly into training paragraphs.
+
+    replaces the old raw-OCR heuristics entirely (paragraph-boundary
+    guessing off vertical gaps/ALL-CAPS headers/numbered-line starts,
+    plus a metadata-line filter for page numbers and running headers) -
+    a parsed Section's body has ALL of that already stripped out by
+    pdf_utils.py and the act parser itself (running headers via
+    remove_repeated_headers, the TOC via each parser's own split logic,
+    footnote junk via _resolve_footnote_markers). there's nothing left
+    to heuristically clean up here.
+
+    each Section is its own natural paragraph unit - one real, numbered
+    provision of the Act, not a guessed OCR paragraph boundary. no need
+    to additionally cap length the way the old max_paragraph_words split
+    did for raw OCR text either: _build_windows already slices anything
+    longer than window_size into multiple training examples regardless
+    of how long the paragraph handed to it is."""
     paragraphs = []
-    current_para = []
-    
-    for span in spans:
-        text = span.text.strip()
-        if not text:
+    for section in sections:
+        body = section.body.strip()
+        if not body:
             continue
-            
-        # Skip metadata lines
-        if _is_metadata_line(text):
-            if current_para:
-                paragraphs.append(" ".join(current_para))
-                current_para = []
+        if len(body.split()) < CONFIG.min_paragraph_words:
+            # too short to be useful training text - e.g. a repealed
+            # section's stub body, which is just "[<title>]"
             continue
-        
-        # Detect paragraph boundaries using multiple heuristics
-        is_new_paragraph = False
-        
-        # 1. Check for indentation (if available in span)
-        if hasattr(span, 'is_paragraph_start') and span.is_paragraph_start:
-            is_new_paragraph = True
-        
-        # 2. Check for blank line gaps (if available)
-        if hasattr(span, 'vertical_gap') and span.vertical_gap > 10:  # pixels
-            is_new_paragraph = True
-        
-        # 3. Check for section headers (ALL CAPS, short)
-        if len(text) < 30 and text.isupper() and len(text.split()) <= 4:
-            is_new_paragraph = True
-        
-        # 4. Check for numbered sections
-        if re.match(r"^\d+\.\s+[A-Z]", text):
-            is_new_paragraph = True
-        
-        # Start new paragraph if needed
-        if is_new_paragraph and current_para:
-            paragraphs.append(" ".join(current_para))
-            current_para = []
-        
-        current_para.append(text)
-        
-        # End paragraph if long enough
-        if len(" ".join(current_para).split()) > CONFIG.max_paragraph_words:
-            paragraphs.append(" ".join(current_para))
-            current_para = []
-    
-    if current_para:
-        paragraphs.append(" ".join(current_para))
-    
-    # Filter very short paragraphs
-    return [p for p in paragraphs if len(p.split()) >= CONFIG.min_paragraph_words]
-
-
-def _is_metadata_line(text: str) -> bool:
-    """Check if line looks like header/footer/page number/metadata."""
-    text = text.strip()
-    
-    # Check against patterns
-    for pattern in CONFIG.metadata_patterns:
-        if re.search(pattern, text, re.I):
-            return True
-    
-    # Very short all-caps lines
-    if len(text) < 20 and text.isupper():
-        return True
-    
-    # Lines with only numbers and punctuation
-    if re.match(r"^[\d\.,\s]+$", text):
-        return True
-    
-    return False
+        paragraphs.append(body)
+    return paragraphs
 
 
 def _build_windows(paragraph: str) -> List[List[str]]:
@@ -734,12 +770,20 @@ def _apply_spell_corruption(words: List[str], labels: List[str]) -> Tuple[List[s
     return words, labels
 
 
-def _typo(word: str) -> str:
+def _typo(word: str, _exclude: Optional[Set[str]] = None) -> str:
     """Apply a keyboard-based typo."""
     if len(word) < 2:
         return word
-    
-    strategy = random.choice(["swap", "delete", "insert", "substitute"])
+
+    exclude = _exclude or set()
+    available = [s for s in ("swap", "delete", "insert", "substitute") if s not in exclude]
+    if not available:
+        # every strategy already ruled out on retry (only "delete" ever
+        # retries, and it excludes itself each time - see below) - give
+        # up and return the word unchanged rather than recursing forever
+        return word
+
+    strategy = random.choice(available)
     
     # Don't corrupt the first or last char more often
     pos = random.randint(0, len(word) - 1)
@@ -754,7 +798,10 @@ def _typo(word: str) -> str:
     
     if strategy == "delete":
         if len(word) <= 3:  # Don't make words too short
-            return _typo(word)  # Retry
+            # bounded retry: exclude "delete" this time instead of an
+            # unbounded recursive call - guarantees termination within
+            # one extra call, since no other branch ever retries
+            return _typo(word, _exclude=exclude | {"delete"})
         return word[:pos] + word[pos + 1:]
     
     if strategy == "insert":
@@ -847,7 +894,7 @@ def _report_statistics(splits: Dict[str, List[Tuple[List[str], List[str]]]]) -> 
 
 def _generate_manifest(
     args: argparse.Namespace,
-    pdfs_used: List[str],
+    acts_used: List[Dict[str, Any]],
     stats: Dict[str, Any],
     splits: Dict[str, List[Tuple[List[str], List[str]]]],
     checksums: Dict[str, str]
@@ -857,8 +904,8 @@ def _generate_manifest(
         "generated_at": datetime.now().isoformat(),
         "seed": args.seed,
         "corpus_path": str(args.corpus),
-        "pdfs_used": pdfs_used,
-        "num_pdfs": len(pdfs_used),
+        "acts_used": acts_used,
+        "num_acts": len(acts_used),
         "examples": stats["total_examples"],
         "splits": stats["splits"],
         "label_distribution": stats["label_distribution"],
@@ -872,7 +919,7 @@ def _generate_manifest(
         "min_paragraph_words": CONFIG.min_paragraph_words,
         "max_paragraph_words": CONFIG.max_paragraph_words,
         "checksums": checksums,
-        "generator_version": "2.1",
+        "generator_version": "3.0",  # bumped: now sourced from parsed Sections, not raw OCR
     }
     
     # Try to get git commit

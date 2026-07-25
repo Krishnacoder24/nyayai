@@ -28,6 +28,14 @@ _PARSERS = {
     "CONSTITUTION": ConstitutionParser(),
 }
 
+#anything that needs to know "which acts can actually be parsed right now"
+# (e.g. scripts/generate_data.py) should read this instead of keeping
+# its own separate list that could drift out of sync as acts get added.
+
+
+SUPPORTED_ACTS = list(_PARSERS.keys())
+
+
 
 def parse_act(pdf_path: Path, act: str) -> list[Section]:
     parser = _PARSERS.get(act.strip().upper())

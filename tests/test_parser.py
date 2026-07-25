@@ -8,7 +8,7 @@ sections = parse_act(pdf, "CONSTITUTION")
 
 print(f"Parsed {len(sections)} sections\n")
 
-for section in sections[:10]:
+for section in sections[:2]:
     print("=" * 80)
     print(f"{section.unit_type.title()} {section.number}")
     print(section.title)
