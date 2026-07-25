@@ -12,8 +12,7 @@ from model.preprocess import build_chunks
 from model.predict import predict
 from model.postprocess import build_error_spans
 
-from rules.citation_checker import check_citations
-from rules.entity_checker import check_entities
+from rules.registry import RULES
 
 from pipeline.merger import merge_spans
 from pipeline.deduplicate import deduplicate
@@ -21,10 +20,13 @@ from pipeline.deduplicate import deduplicate
 
 def analyze(spans: list[LineSpan]) -> list[ErrorSpan]:
     ml_errors = _run_ml(spans)
-    citation_errors = check_citations(spans)
-    entity_errors = check_entities(spans)
 
-    merged = merge_spans(ml_errors, citation_errors, entity_errors)
+    # run every registered rule checker — to add a new rule, edit rules/registry.py only
+    rule_errors = []
+    for rule in RULES:
+        rule_errors.extend(rule(spans))
+
+    merged = merge_spans(ml_errors, *rule_errors)
     deduped = deduplicate(merged)
 
     return _sort_reading_order(deduped)
