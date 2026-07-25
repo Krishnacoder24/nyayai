@@ -59,17 +59,33 @@ FOOTNOTE_REGION_MAX_TOP_FRACTION = 0.5
 MARKER_DIGIT_ADJACENCY_RATIO = 0.5
 
 
-def _dominant_font_size(pdf: pdfplumber.PDF) -> float:
-    """median character size across the whole document - used as the
-    "normal body text" baseline every page's digits get compared
-    against, so a page that happens to be mostly footnotes (or a mostly-
-    blank page) doesn't shift the threshold for everyone else."""
-    sizes = [
-        char["size"]
-        for page in pdf.pages
-        for char in page.chars
-        if char.get("text", "").strip()
-    ]
+def _page_font_size(page: Page) -> float:
+    """median character size on THIS page - used as this page's own
+    "normal body text" baseline that its digits get compared against.
+
+    this used to be one baseline computed across the whole document
+    (see git history), on the assumption that "smaller than body text"
+    means the same thing on every page. cpc.pdf disproves that: checking
+    the per-page median across the real file, ~30 of its 347 pages are
+    typeset at a different (usually smaller) body size than the
+    document's overall median - long sections with lettered sub-clauses
+    (e.g. section 60) get a denser 9pt page to fit more per page, vs.
+    the document's dominant 11.04pt.
+
+    with a document-wide baseline, an entire 9pt page reads as
+    "smaller than normal", so a genuine heading like "60. Property
+    liable to attachment...", sitting in the bottom half of the page
+    and matching the "N. text" shape, gets misread as the START of the
+    footnote-definition block - and everything from there to the
+    bottom of the page (the real body of section 60) gets folded into
+    `footnotes` and blanked out of the body text entirely. confirmed
+    directly: before this fix, extract_pdf_pages() for that page had no
+    trace of section 60's opening text anywhere in it.
+
+    comparing each page only to itself avoids this - a page that's
+    uniformly 9pt has no "smaller than normal" text to misfire on,
+    because there's no local contrast to find."""
+    sizes = [char["size"] for char in page.chars if char.get("text", "").strip()]
     return statistics.median(sizes) if sizes else 0.0
 
 
@@ -318,8 +334,10 @@ def extract_pdf_text(pdf_path: Path) -> str:
     they denote (see _resolve_footnote_markers), bracketed inline.
     """
     with pdfplumber.open(pdf_path) as pdf:
-        baseline = _dominant_font_size(pdf)
-        pages = [_drop_blank_lines(_resolve_footnote_markers(page, baseline).extract_text() or "") for page in pdf.pages]
+        pages = [
+            _drop_blank_lines(_resolve_footnote_markers(page, _page_font_size(page)).extract_text() or "")
+            for page in pdf.pages
+        ]
     return "\n".join(pages)
 
 
@@ -331,8 +349,10 @@ def extract_pdf_pages(pdf_path: Path) -> list[str]:
     extract_pdf_text.
     """
     with pdfplumber.open(pdf_path) as pdf:
-        baseline = _dominant_font_size(pdf)
-        return [_drop_blank_lines(_resolve_footnote_markers(page, baseline).extract_text() or "") for page in pdf.pages]
+        return [
+            _drop_blank_lines(_resolve_footnote_markers(page, _page_font_size(page)).extract_text() or "")
+            for page in pdf.pages
+        ]
 
 
 def remove_repeated_headers(pages: list[str], threshold: float = 0.5) -> list[str]:
