@@ -2,9 +2,9 @@ from pathlib import Path
 
 from corpus.parser import parse_act
 
-pdf = Path("corpus/sources/crpc/crpc.pdf")
+pdf = Path("corpus/sources/constitution/constitution.pdf")
 
-sections = parse_act(pdf, "CRPC")
+sections = parse_act(pdf, "CONSTITUTION")
 
 print(f"Parsed {len(sections)} sections\n")
 
