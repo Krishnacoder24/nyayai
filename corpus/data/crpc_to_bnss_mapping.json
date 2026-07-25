@@ -1,0 +1,3220 @@
+{
+  "_provenance": {
+    "description": "CrPC (1973) to BNSS (2023) section concordance table",
+    "source": "Comparative Table of CrPC 1973 & BNSS 2023, compiled by Adv. Gurender Rana / Rathee & Associates for the Dwarka Court Bar Association",
+    "source_url": "https://wbllroa.in/wp-content/uploads/2024/07/COMPARATIVE-TABLE-OF-CRPC-1973-BHARTIYA-NAGARIK-SURAKSHA-SANHITA-2023-ADV-GURENDER-RANA.pdf",
+    "fetched": "2026-07-24",
+    "caveat": "This is a practitioner-compiled comparative table, not the raw MHA/Gazette comparative statement itself. Cross-checked internally for consistency (total CrPC section count tops out at 484 'Repeal and savings', matching the real Act; BNSS tops out at 531, matching the real Act) but NOT independently verified section-by-section against the primary source. Recommend a final spot-check against the official MHA comparative statement or IndiaCode before treating this as unconditionally authoritative for production use, per project policy on legal-data verification.",
+    "note_on_112_113": "BNSS sections 112 and 113 appear TWICE in the source table - once as a forward-reference placeholder (annotated 'See Section 166A/166B Cr.P.C') positioned where the 105-series sections would otherwise expect a match, and once correctly paired with CrPC 166A/166B later in the document (BNSS relocated this content earlier in its own numbering than CrPC's). The duplicate placeholder listing has been dropped from 'new_in_bnss_no_crpc_predecessor' - both sections DO have a CrPC predecessor.",
+    "sections_with_no_bnss_successor": 11,
+    "no_crpc_parser_exists_yet": "Unlike IPC_TO_BNS, this table isn't currently wired into any parser (no corpus/parsers/crpc.py exists in this codebase). Stored here so it's ready when/if one is built."
+  },
+  "mappings": [
+    {
+      "crpc": "1",
+      "title": "Short title, extent and commencement",
+      "bnss": "1",
+      "bnss_heading": "Short title, extent and commencement"
+    },
+    {
+      "crpc": "2",
+      "title": "Definitions",
+      "bnss": "2",
+      "bnss_heading": "Definitions"
+    },
+    {
+      "crpc": "3",
+      "title": "Construction of references",
+      "bnss": "3",
+      "bnss_heading": "Construction of references"
+    },
+    {
+      "crpc": "4",
+      "title": "Trial of offences under the Indian Penal Code and other laws",
+      "bnss": "4",
+      "bnss_heading": "Trial of offences under Bhartiya Nyaya Sanhita and other laws"
+    },
+    {
+      "crpc": "5",
+      "title": "Saving",
+      "bnss": "5",
+      "bnss_heading": "Saving"
+    },
+    {
+      "crpc": "6",
+      "title": "Classes of Criminal Courts",
+      "bnss": "6",
+      "bnss_heading": "Classes of Criminal Courts"
+    },
+    {
+      "crpc": "7",
+      "title": "Territorial divisions",
+      "bnss": "7",
+      "bnss_heading": "Territorial divisions"
+    },
+    {
+      "crpc": "8",
+      "title": "Metropolitan areas",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "9",
+      "title": "Court of Session",
+      "bnss": "8",
+      "bnss_heading": "Court of Session"
+    },
+    {
+      "crpc": "10",
+      "title": "Subordination of Assistant Sessions Judges",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "11",
+      "title": "Courts of Judicial Magistrates",
+      "bnss": "9",
+      "bnss_heading": "Courts of Judicial Magistrates"
+    },
+    {
+      "crpc": "12",
+      "title": "Chief Judicial Magistrate and Additional Chief Judicial Magistrate, etc.",
+      "bnss": "10",
+      "bnss_heading": "Chief Judicial Magistrate and Additional Chief Judicial Magistrate, etc."
+    },
+    {
+      "crpc": "13",
+      "title": "Special Judicial Magistrates",
+      "bnss": "11",
+      "bnss_heading": "Special Judicial Magistrates"
+    },
+    {
+      "crpc": "14",
+      "title": "Local jurisdiction of Judicial Magistrates",
+      "bnss": "12",
+      "bnss_heading": "Local jurisdiction of Judicial Magistrates"
+    },
+    {
+      "crpc": "15",
+      "title": "Subordination of Judicial Magistrates",
+      "bnss": "13",
+      "bnss_heading": "Subordination of Judicial Magistrates"
+    },
+    {
+      "crpc": "16",
+      "title": "Courts of Metropolitan Magistrates",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "17",
+      "title": "Chief Metropolitan Magistrate and Additional Chief Metropolitan Magistrate",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "18",
+      "title": "Special Metropolitan Magistrates",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "19",
+      "title": "Subordination of Metropolitan Magistrates",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "20",
+      "title": "Executive Magistrates",
+      "bnss": "14",
+      "bnss_heading": "Executive Magistrates"
+    },
+    {
+      "crpc": "21",
+      "title": "Special Executive Magistrates",
+      "bnss": "15",
+      "bnss_heading": "Special Executive Magistrates"
+    },
+    {
+      "crpc": "22",
+      "title": "Local jurisdiction of Executive Magistrates",
+      "bnss": "16",
+      "bnss_heading": "Local jurisdiction of Executive Magistrates"
+    },
+    {
+      "crpc": "23",
+      "title": "Subordination of Executive Magistrates",
+      "bnss": "17",
+      "bnss_heading": "Subordination of Executive Magistrates"
+    },
+    {
+      "crpc": "24",
+      "title": "Public Prosecutors",
+      "bnss": "18",
+      "bnss_heading": "Public Prosecutors"
+    },
+    {
+      "crpc": "25",
+      "title": "Assistant Public Prosecutors",
+      "bnss": "19",
+      "bnss_heading": "Assistant Public Prosecutors"
+    },
+    {
+      "crpc": "25A",
+      "title": "Directorate of Prosecution",
+      "bnss": "20",
+      "bnss_heading": "Directorate of Prosecution"
+    },
+    {
+      "crpc": "26",
+      "title": "Courts by which offences are triable",
+      "bnss": "21",
+      "bnss_heading": "Courts by which offences are triable"
+    },
+    {
+      "crpc": "27",
+      "title": "Jurisdiction in the case of juveniles",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "28",
+      "title": "Sentences which High Courts and Sessions Judges may pass",
+      "bnss": "22",
+      "bnss_heading": "Sentences which High Courts and Sessions Judges may pass"
+    },
+    {
+      "crpc": "29",
+      "title": "Sentences which Magistrates may pass",
+      "bnss": "23",
+      "bnss_heading": "Sentences which Magistrates may pass"
+    },
+    {
+      "crpc": "30",
+      "title": "Sentence of imprisonment in default of fine",
+      "bnss": "24",
+      "bnss_heading": "Sentence of imprisonment in default of fine"
+    },
+    {
+      "crpc": "31",
+      "title": "Sentence in cases of conviction of several offences at one trial",
+      "bnss": "25",
+      "bnss_heading": "Sentence in cases of conviction of several offences at one trial"
+    },
+    {
+      "crpc": "32",
+      "title": "Mode of conferring powers",
+      "bnss": "26",
+      "bnss_heading": "Mode of conferring powers"
+    },
+    {
+      "crpc": "33",
+      "title": "Powers of officers appointed",
+      "bnss": "27",
+      "bnss_heading": "Powers of officers appointed"
+    },
+    {
+      "crpc": "34",
+      "title": "Withdrawal of powers",
+      "bnss": "28",
+      "bnss_heading": "Withdrawal of powers"
+    },
+    {
+      "crpc": "35",
+      "title": "Powers of Judges and Magistrates exercisable by their successors-in-office",
+      "bnss": "29",
+      "bnss_heading": "Powers of Judges and Magistrates exercisable by their successors-in-office"
+    },
+    {
+      "crpc": "38",
+      "title": "Aid to person, other than police officer, executing warrant",
+      "bnss": "32",
+      "bnss_heading": "Aid to person, other than police officer, executing warrant"
+    },
+    {
+      "crpc": "39",
+      "title": "Public to give information of certain offences",
+      "bnss": "33",
+      "bnss_heading": "Public to give information of certain offences"
+    },
+    {
+      "crpc": "40",
+      "title": "Duty of officers employed in connection with the affairs of a village to make certain report",
+      "bnss": "34",
+      "bnss_heading": "Duty of officers employed in connection with the affairs of a village to make certain report"
+    },
+    {
+      "crpc": "41",
+      "title": "When police may arrest without warrant",
+      "bnss": "35",
+      "bnss_heading": "When police may arrest without warrant"
+    },
+    {
+      "crpc": "41A",
+      "title": "Notice of appearance before police officer",
+      "bnss": "35(3)",
+      "bnss_heading": "When police may arrest without warrant"
+    },
+    {
+      "crpc": "41B",
+      "title": "Procedure of arrest and duties of officer making arrest",
+      "bnss": "36",
+      "bnss_heading": "Procedure of arrest and duties of officer making arrest"
+    },
+    {
+      "crpc": "41C",
+      "title": "Control room at districts",
+      "bnss": "37",
+      "bnss_heading": "Designated Police Officer"
+    },
+    {
+      "crpc": "41D",
+      "title": "Right of arrested person to meet an advocate of his choice during interrogation",
+      "bnss": "38",
+      "bnss_heading": "Right of arrested person to meet an advocate of his choice during interrogation"
+    },
+    {
+      "crpc": "42",
+      "title": "Arrest on refusal to give name and residence",
+      "bnss": "39",
+      "bnss_heading": "Arrest on refusal to give name and residence"
+    },
+    {
+      "crpc": "43",
+      "title": "Arrest by private person and procedure on such arrest",
+      "bnss": "40",
+      "bnss_heading": "Arrest by private person and procedure on such arrest"
+    },
+    {
+      "crpc": "44",
+      "title": "Arrest by Magistrate",
+      "bnss": "41",
+      "bnss_heading": "Arrest by Magistrate"
+    },
+    {
+      "crpc": "45",
+      "title": "Protection of members of the Armed Forces from arrest",
+      "bnss": "42",
+      "bnss_heading": "Protection of members of the Armed Forces from arrest"
+    },
+    {
+      "crpc": "46",
+      "title": "Arrest how made",
+      "bnss": "43",
+      "bnss_heading": "Arrest how made"
+    },
+    {
+      "crpc": "47",
+      "title": "Search of place entered by person sought to be arrested",
+      "bnss": "44",
+      "bnss_heading": "Search of place entered by person sought to be arrested"
+    },
+    {
+      "crpc": "48",
+      "title": "Pursuit of offenders into other jurisdictions",
+      "bnss": "45",
+      "bnss_heading": "Pursuit of offenders into other jurisdictions"
+    },
+    {
+      "crpc": "49",
+      "title": "No unnecessary restraint",
+      "bnss": "46",
+      "bnss_heading": "No unnecessary restraint"
+    },
+    {
+      "crpc": "50",
+      "title": "Person arrested to be informed of grounds of arrest and of right to bail",
+      "bnss": "47",
+      "bnss_heading": "Person arrested to be informed of grounds of arrest and of right to bail"
+    },
+    {
+      "crpc": "50A",
+      "title": "Obligation of person making arrest to inform about the arrest, etc., to a nominated person",
+      "bnss": "48",
+      "bnss_heading": "Obligation of person making arrest to inform about the arrest, etc., to relative or friend"
+    },
+    {
+      "crpc": "51",
+      "title": "Search of arrested person",
+      "bnss": "49",
+      "bnss_heading": "Search of arrested person"
+    },
+    {
+      "crpc": "52",
+      "title": "Power to seize offensive weapons",
+      "bnss": "50",
+      "bnss_heading": "Power to seize offensive weapons"
+    },
+    {
+      "crpc": "53",
+      "title": "Examination of accused by medical practitioner at the request of police officer",
+      "bnss": "51",
+      "bnss_heading": "Examination of accused by medical practitioner at the request of police officer"
+    },
+    {
+      "crpc": "53A",
+      "title": "Examination of person accused of rape by medical practitioner",
+      "bnss": "52",
+      "bnss_heading": "Examination of person accused of rape by medical practitioner"
+    },
+    {
+      "crpc": "54",
+      "title": "Examination of arrested person by medical officer",
+      "bnss": "53",
+      "bnss_heading": "Examination of arrested person by medical officer"
+    },
+    {
+      "crpc": "54A",
+      "title": "Identification of person arrested",
+      "bnss": "54",
+      "bnss_heading": "Identification of person arrested"
+    },
+    {
+      "crpc": "55",
+      "title": "Procedure when police officer deputes subordinate to arrest without warrant",
+      "bnss": "55",
+      "bnss_heading": "Procedure when police officer deputes subordinate to arrest without warrant"
+    },
+    {
+      "crpc": "55A",
+      "title": "Health and safety of arrested person",
+      "bnss": "56",
+      "bnss_heading": "Health and safety of arrested person"
+    },
+    {
+      "crpc": "56",
+      "title": "Person arrested to be taken before Magistrate or officer in charge of police station",
+      "bnss": "57",
+      "bnss_heading": "Person arrested to be taken before Magistrate or officer in charge of police station"
+    },
+    {
+      "crpc": "57",
+      "title": "Person arrested not to be detained more than twenty-four hours",
+      "bnss": "58",
+      "bnss_heading": "Person arrested not to be detained more than twenty-four hours"
+    },
+    {
+      "crpc": "58",
+      "title": "Police to report apprehensions",
+      "bnss": "59",
+      "bnss_heading": "Police to report apprehensions"
+    },
+    {
+      "crpc": "59",
+      "title": "Discharge of person apprehended",
+      "bnss": "60",
+      "bnss_heading": "Discharge of person apprehended"
+    },
+    {
+      "crpc": "60",
+      "title": "Power, on escape, to pursue and retake",
+      "bnss": "61",
+      "bnss_heading": "Power, on escape, to pursue and retake"
+    },
+    {
+      "crpc": "60A",
+      "title": "Arrest to be made strictly according to the Code",
+      "bnss": "62",
+      "bnss_heading": "Arrest to be made strictly according to Sanhita"
+    },
+    {
+      "crpc": "61",
+      "title": "Form of summons",
+      "bnss": "63",
+      "bnss_heading": "Form of summons"
+    },
+    {
+      "crpc": "62",
+      "title": "Summons how served",
+      "bnss": "64",
+      "bnss_heading": "Summons how served"
+    },
+    {
+      "crpc": "63",
+      "title": "Service of summons on corporate bodies and societies",
+      "bnss": "65",
+      "bnss_heading": "Service of summons on corporate bodies, firms, and societies"
+    },
+    {
+      "crpc": "64",
+      "title": "Service when persons summoned cannot be found",
+      "bnss": "66",
+      "bnss_heading": "Service when persons summoned cannot be found"
+    },
+    {
+      "crpc": "65",
+      "title": "Procedure when service cannot be effected as before provided",
+      "bnss": "67",
+      "bnss_heading": "Procedure when service cannot be effected as before provided"
+    },
+    {
+      "crpc": "66",
+      "title": "Service on Government servant",
+      "bnss": "68",
+      "bnss_heading": "Service on Government servant"
+    },
+    {
+      "crpc": "67",
+      "title": "Service of summons outside local limits",
+      "bnss": "69",
+      "bnss_heading": "Service of summons outside local limits"
+    },
+    {
+      "crpc": "68",
+      "title": "Proof of service in such cases and when serving officer not present",
+      "bnss": "70",
+      "bnss_heading": "Proof of service in such cases and when serving officer not present"
+    },
+    {
+      "crpc": "69",
+      "title": "Service of summons on witness by post",
+      "bnss": "71",
+      "bnss_heading": "Service of summons on witness"
+    },
+    {
+      "crpc": "70",
+      "title": "Form of warrant of arrest and duration",
+      "bnss": "72",
+      "bnss_heading": "Form of warrant of arrest and duration"
+    },
+    {
+      "crpc": "71",
+      "title": "Power to direct security to be taken",
+      "bnss": "73",
+      "bnss_heading": "Power to direct security to be taken"
+    },
+    {
+      "crpc": "72",
+      "title": "Warrants to whom directed",
+      "bnss": "74",
+      "bnss_heading": "Warrants to whom directed"
+    },
+    {
+      "crpc": "73",
+      "title": "Warrant may be directed to any person",
+      "bnss": "75",
+      "bnss_heading": "Warrant may be directed to any person"
+    },
+    {
+      "crpc": "74",
+      "title": "Warrant directed to police officer",
+      "bnss": "76",
+      "bnss_heading": "Warrant directed to police officer"
+    },
+    {
+      "crpc": "75",
+      "title": "Notification of substance of warrant",
+      "bnss": "77",
+      "bnss_heading": "Notification of substance of warrant"
+    },
+    {
+      "crpc": "76",
+      "title": "Person arrested to be brought before Court without delay",
+      "bnss": "78",
+      "bnss_heading": "Person arrested to be brought before Court without delay"
+    },
+    {
+      "crpc": "77",
+      "title": "Where warrant may be executed",
+      "bnss": "79",
+      "bnss_heading": "Where warrant may be executed"
+    },
+    {
+      "crpc": "78",
+      "title": "Warrant forwarded for execution outside jurisdiction",
+      "bnss": "80",
+      "bnss_heading": "Warrant forwarded for execution outside jurisdiction"
+    },
+    {
+      "crpc": "79",
+      "title": "Warrant directed to police officer for execution outside jurisdiction",
+      "bnss": "81",
+      "bnss_heading": "Warrant directed to police officer for execution outside jurisdiction"
+    },
+    {
+      "crpc": "80",
+      "title": "Procedure on arrest of person against whom warrant issued",
+      "bnss": "82",
+      "bnss_heading": "Procedure on arrest of person against whom warrant issued"
+    },
+    {
+      "crpc": "81",
+      "title": "Procedure by Magistrate before whom such person arrested is brought",
+      "bnss": "83",
+      "bnss_heading": "Procedure by Magistrate before whom such person arrested is brought"
+    },
+    {
+      "crpc": "82",
+      "title": "Proclamation for person absconding",
+      "bnss": "84",
+      "bnss_heading": "Proclamation for person absconding"
+    },
+    {
+      "crpc": "83",
+      "title": "Attachment of property of person absconding",
+      "bnss": "85",
+      "bnss_heading": "Attachment of property of person absconding"
+    },
+    {
+      "crpc": "84",
+      "title": "Claims and objections to attachment",
+      "bnss": "87",
+      "bnss_heading": "Claims and objections to attachment"
+    },
+    {
+      "crpc": "85",
+      "title": "Release, sale and restoration of attached property",
+      "bnss": "88",
+      "bnss_heading": "Release, sale and restoration of attached property"
+    },
+    {
+      "crpc": "86",
+      "title": "Appeal from order rejecting application for restoration of attached property",
+      "bnss": "89",
+      "bnss_heading": "Appeal from order rejecting application for restoration of attached property"
+    },
+    {
+      "crpc": "87",
+      "title": "Issue of warrant in lieu of, or in addition to, summons",
+      "bnss": "90",
+      "bnss_heading": "Issue of warrant in lieu of, or in addition to, summons"
+    },
+    {
+      "crpc": "88",
+      "title": "Power to take bond for appearance",
+      "bnss": "91",
+      "bnss_heading": "Power to take bond or bail bond for appearance"
+    },
+    {
+      "crpc": "89",
+      "title": "Arrest on breach of bond for appearance",
+      "bnss": "92",
+      "bnss_heading": "Arrest on breach of bond or bail bond for appearance"
+    },
+    {
+      "crpc": "90",
+      "title": "Provisions of this Chapter generally applicable to summonses and warrants of arrest",
+      "bnss": "93",
+      "bnss_heading": "Provisions of this Chapter generally applicable to summonses and warrants of arrest"
+    },
+    {
+      "crpc": "91",
+      "title": "Summons to produce document or other thing",
+      "bnss": "94",
+      "bnss_heading": "Summons to produce document or other thing"
+    },
+    {
+      "crpc": "92",
+      "title": "Procedure as to letters and telegrams",
+      "bnss": "95",
+      "bnss_heading": "Procedure as to letters"
+    },
+    {
+      "crpc": "93",
+      "title": "When search-warrant may be issued",
+      "bnss": "96",
+      "bnss_heading": "When search-warrant may be issued"
+    },
+    {
+      "crpc": "94",
+      "title": "Search of place suspected to contain stolen property, forged documents, etc.",
+      "bnss": "97",
+      "bnss_heading": "Search of place suspected to contain stolen property, forged documents, etc."
+    },
+    {
+      "crpc": "95",
+      "title": "Power to declare certain publications forfeited and to issue search-warrants for the same",
+      "bnss": "98",
+      "bnss_heading": "Power to declare certain publications forfeited and to issue search-warrants for the same"
+    },
+    {
+      "crpc": "96",
+      "title": "Application to High Court to set aside declaration of forfeiture",
+      "bnss": "99",
+      "bnss_heading": "Application to High Court to set aside declaration of forfeiture"
+    },
+    {
+      "crpc": "97",
+      "title": "Search for persons wrongfully confined",
+      "bnss": "100",
+      "bnss_heading": "Search for persons wrongfully confined"
+    },
+    {
+      "crpc": "98",
+      "title": "Power to compel restoration of abducted females",
+      "bnss": "101",
+      "bnss_heading": "Power to compel restoration of abducted females"
+    },
+    {
+      "crpc": "99",
+      "title": "Direction, etc., of search warrants",
+      "bnss": "102",
+      "bnss_heading": "Direction, etc., of search-warrants"
+    },
+    {
+      "crpc": "100",
+      "title": "Persons in charge of closed place to allow search",
+      "bnss": "103",
+      "bnss_heading": "Persons in charge of closed place to allow search"
+    },
+    {
+      "crpc": "101",
+      "title": "Disposal of things found in search beyond jurisdiction",
+      "bnss": "104",
+      "bnss_heading": "Disposal of things found in search beyond jurisdiction"
+    },
+    {
+      "crpc": "102",
+      "title": "Power of Police Officer to seize certain property",
+      "bnss": "106",
+      "bnss_heading": "Power of police officer to seize certain property"
+    },
+    {
+      "crpc": "103",
+      "title": "Magistrate may direct search in his presence",
+      "bnss": "108",
+      "bnss_heading": "Magistrate may direct search in his presence"
+    },
+    {
+      "crpc": "104",
+      "title": "Power to impound document, etc., produced",
+      "bnss": "109",
+      "bnss_heading": "Power to impound document, etc., produced"
+    },
+    {
+      "crpc": "105",
+      "title": "Reciprocal arrangements regarding processes",
+      "bnss": "110",
+      "bnss_heading": "Reciprocal arrangements regarding processes"
+    },
+    {
+      "crpc": "105A",
+      "title": "Definitions",
+      "bnss": "111",
+      "bnss_heading": "Definitions"
+    },
+    {
+      "crpc": "105B",
+      "title": "Assistance in securing transfer of persons",
+      "bnss": "114",
+      "bnss_heading": "Assistance in securing transfer of persons"
+    },
+    {
+      "crpc": "105C",
+      "title": "Assistance in relation to orders of attachment or forfeiture of property",
+      "bnss": "115",
+      "bnss_heading": "Assistance in relation to orders of attachment or forfeiture of property"
+    },
+    {
+      "crpc": "105D",
+      "title": "Identifying unlawfully acquired property",
+      "bnss": "116",
+      "bnss_heading": "Identifying unlawfully acquired property"
+    },
+    {
+      "crpc": "105E",
+      "title": "Seizure or attachment of property",
+      "bnss": "117",
+      "bnss_heading": "Seizure or attachment of property"
+    },
+    {
+      "crpc": "105F",
+      "title": "Management of properties seized or forfeited under this Chapter",
+      "bnss": "118",
+      "bnss_heading": "Management of properties seized or forfeited under this Chapter"
+    },
+    {
+      "crpc": "105G",
+      "title": "Notice of forfeiture of property",
+      "bnss": "119",
+      "bnss_heading": "Notice of forfeiture of property"
+    },
+    {
+      "crpc": "105H",
+      "title": "Forfeiture of property in certain cases",
+      "bnss": "120",
+      "bnss_heading": "Forfeiture of property in certain cases"
+    },
+    {
+      "crpc": "105-I",
+      "title": "Fine in lieu of forfeiture",
+      "bnss": "121",
+      "bnss_heading": "Fine in lieu of forfeiture"
+    },
+    {
+      "crpc": "105J",
+      "title": "Certain transfers to be null and void",
+      "bnss": "122",
+      "bnss_heading": "Certain transfers to be null and void"
+    },
+    {
+      "crpc": "105K",
+      "title": "Procedure in respect of letter of request",
+      "bnss": "123",
+      "bnss_heading": "Procedure in respect of letter of request"
+    },
+    {
+      "crpc": "105L",
+      "title": "Application of this Chapter",
+      "bnss": "124",
+      "bnss_heading": "Application of this Chapter"
+    },
+    {
+      "crpc": "106",
+      "title": "Security for keeping the peace on conviction",
+      "bnss": "125",
+      "bnss_heading": "Security for keeping peace on conviction"
+    },
+    {
+      "crpc": "107",
+      "title": "Security for keeping the peace in other cases",
+      "bnss": "126",
+      "bnss_heading": "Security for keeping peace in other cases"
+    },
+    {
+      "crpc": "108",
+      "title": "Security for good behaviour from persons disseminating seditious matters",
+      "bnss": "127",
+      "bnss_heading": "Security for good behaviour from persons disseminating certain matters"
+    },
+    {
+      "crpc": "109",
+      "title": "Security for good behaviour from suspected persons",
+      "bnss": "128",
+      "bnss_heading": "Security for good behaviour from suspected persons"
+    },
+    {
+      "crpc": "110",
+      "title": "Security for good behaviour from habitual offenders",
+      "bnss": "129",
+      "bnss_heading": "Security for good behaviour from habitual offenders"
+    },
+    {
+      "crpc": "111",
+      "title": "Order to be made",
+      "bnss": "130",
+      "bnss_heading": "Order to be made"
+    },
+    {
+      "crpc": "112",
+      "title": "Procedure in respect of person present in Court",
+      "bnss": "131",
+      "bnss_heading": "Procedure in respect of person present in Court"
+    },
+    {
+      "crpc": "113",
+      "title": "Summons or warrant in case of person not so present",
+      "bnss": "132",
+      "bnss_heading": "Summons or warrant in case of person not so present"
+    },
+    {
+      "crpc": "114",
+      "title": "Copy of order to accompany summons or warrant",
+      "bnss": "133",
+      "bnss_heading": "Copy of order to accompany summons or warrant"
+    },
+    {
+      "crpc": "115",
+      "title": "Power to dispense with personal attendance",
+      "bnss": "134",
+      "bnss_heading": "Power to dispense with personal attendance"
+    },
+    {
+      "crpc": "116",
+      "title": "Inquiry as to truth of information",
+      "bnss": "135",
+      "bnss_heading": "Inquiry as to truth of information"
+    },
+    {
+      "crpc": "117",
+      "title": "Order to give security",
+      "bnss": "136",
+      "bnss_heading": "Order to give security"
+    },
+    {
+      "crpc": "118",
+      "title": "Discharge of person informed against",
+      "bnss": "137",
+      "bnss_heading": "Discharge of person informed against"
+    },
+    {
+      "crpc": "119",
+      "title": "Commencement of period for which security is required",
+      "bnss": "138",
+      "bnss_heading": "Commencement of period for which security is required"
+    },
+    {
+      "crpc": "120",
+      "title": "Contents of bond",
+      "bnss": "139",
+      "bnss_heading": "Contents of bond"
+    },
+    {
+      "crpc": "121",
+      "title": "Power to reject sureties",
+      "bnss": "140",
+      "bnss_heading": "Power to reject sureties"
+    },
+    {
+      "crpc": "122",
+      "title": "Imprisonment in default of security",
+      "bnss": "141",
+      "bnss_heading": "Imprisonment in default of security"
+    },
+    {
+      "crpc": "123",
+      "title": "Power to release persons imprisoned for failing to give security",
+      "bnss": "142",
+      "bnss_heading": "Power to release persons imprisoned for failing to give security"
+    },
+    {
+      "crpc": "124",
+      "title": "Security for unexpired period of bond",
+      "bnss": "143",
+      "bnss_heading": "Security for unexpired period of bond"
+    },
+    {
+      "crpc": "125",
+      "title": "Order for maintenance of wives, children and parents",
+      "bnss": "144",
+      "bnss_heading": "Order for maintenance of wives, children and parents"
+    },
+    {
+      "crpc": "126",
+      "title": "Procedure",
+      "bnss": "145",
+      "bnss_heading": "Procedure"
+    },
+    {
+      "crpc": "127",
+      "title": "Alteration in allowance",
+      "bnss": "146",
+      "bnss_heading": "Alteration in allowance"
+    },
+    {
+      "crpc": "128",
+      "title": "Enforcement of order of maintenance",
+      "bnss": "147",
+      "bnss_heading": "Enforcement of order of maintenance"
+    },
+    {
+      "crpc": "129",
+      "title": "Dispersal of assembly by use of civil force",
+      "bnss": "148",
+      "bnss_heading": "Dispersal of assembly by use of civil force"
+    },
+    {
+      "crpc": "130",
+      "title": "Use of armed forces to disperse assembly",
+      "bnss": "149",
+      "bnss_heading": "Use of armed forces to disperse assembly"
+    },
+    {
+      "crpc": "131",
+      "title": "Power of certain armed force officers to disperse assembly",
+      "bnss": "150",
+      "bnss_heading": "Power of certain armed force officers to disperse assembly"
+    },
+    {
+      "crpc": "132",
+      "title": "Protection against prosecution for acts done under preceding sections 151 Protection against prosecution for acts done under sections 148,",
+      "bnss": "149",
+      "bnss_heading": "and 150"
+    },
+    {
+      "crpc": "133",
+      "title": "Conditional order for removal of nuisance",
+      "bnss": "152",
+      "bnss_heading": "Conditional order for removal of nuisance"
+    },
+    {
+      "crpc": "134",
+      "title": "Service or notification of order",
+      "bnss": "153",
+      "bnss_heading": "Service or notification of order"
+    },
+    {
+      "crpc": "135",
+      "title": "Person to whom order is addressed to obey or show cause",
+      "bnss": "154",
+      "bnss_heading": "Person to whom order is addressed to obey or show cause"
+    },
+    {
+      "crpc": "136",
+      "title": "Consequences of his failing to do so",
+      "bnss": "155",
+      "bnss_heading": "Penalty for failure to comply with section 154"
+    },
+    {
+      "crpc": "137",
+      "title": "Procedure where existence of public right is denied",
+      "bnss": "156",
+      "bnss_heading": "Procedure where existence of public right is denied"
+    },
+    {
+      "crpc": "138",
+      "title": "Procedure where he appears to show cause",
+      "bnss": "157",
+      "bnss_heading": "Procedure where person against whom order is made under section 152 appears to show cause"
+    },
+    {
+      "crpc": "139",
+      "title": "Power of Magistrate to direct local investigation and examination of an expert",
+      "bnss": "158",
+      "bnss_heading": "Power of Magistrate to direct local investigation and examination of an expert"
+    },
+    {
+      "crpc": "140",
+      "title": "Power of Magistrate to furnish written instructions, etc.",
+      "bnss": "159",
+      "bnss_heading": "Power of Magistrate to furnish written instructions, etc."
+    },
+    {
+      "crpc": "141",
+      "title": "Procedure on order being made absolute and consequences of disobedience",
+      "bnss": "160",
+      "bnss_heading": "Procedure on order being made absolute and consequences of disobedience"
+    },
+    {
+      "crpc": "142",
+      "title": "Injunction pending inquiry",
+      "bnss": "161",
+      "bnss_heading": "Injunction pending inquiry"
+    },
+    {
+      "crpc": "143",
+      "title": "Magistrate may prohibit repetition or continuance of public nuisance",
+      "bnss": "162",
+      "bnss_heading": "Magistrate may prohibit repetition or continuance of public nuisance"
+    },
+    {
+      "crpc": "144",
+      "title": "Power to issue order in urgent cases of nuisance or apprehended danger",
+      "bnss": "163",
+      "bnss_heading": "Power to issue order in urgent cases of nuisance or apprehended danger"
+    },
+    {
+      "crpc": "144A",
+      "title": "Power to prohibit carrying arms in procession or mass drill or mass training with arms",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "145",
+      "title": "Procedure where dispute concerning land or water is likely to cause breach of peace",
+      "bnss": "164",
+      "bnss_heading": "Procedure where dispute concerning land or water is likely to cause breach of peace"
+    },
+    {
+      "crpc": "146",
+      "title": "Power to attach subject of dispute and to appoint receiver",
+      "bnss": "165",
+      "bnss_heading": "Power to attach subject of dispute and to appoint receiver"
+    },
+    {
+      "crpc": "147",
+      "title": "Dispute concerning right of use of land or water",
+      "bnss": "166",
+      "bnss_heading": "Dispute concerning right of use of land or water"
+    },
+    {
+      "crpc": "148",
+      "title": "Local inquiry",
+      "bnss": "167",
+      "bnss_heading": "Local inquiry"
+    },
+    {
+      "crpc": "149",
+      "title": "Police to prevent cognizable offences",
+      "bnss": "168",
+      "bnss_heading": "Police to prevent cognizable offences"
+    },
+    {
+      "crpc": "150",
+      "title": "Information of design to commit cognizable offences",
+      "bnss": "169",
+      "bnss_heading": "Information of design to commit cognizable offences"
+    },
+    {
+      "crpc": "151",
+      "title": "Arrest to prevent the commission of cognizable offences",
+      "bnss": "170",
+      "bnss_heading": "Arrest to prevent the commission of cognizable offences"
+    },
+    {
+      "crpc": "152",
+      "title": "Prevention of injury to public property",
+      "bnss": "171",
+      "bnss_heading": "Prevention of injury to public property"
+    },
+    {
+      "crpc": "153",
+      "title": "Inspection of weights and measures",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "154",
+      "title": "Information in cognizable cases",
+      "bnss": "173",
+      "bnss_heading": "Information in cognizable cases"
+    },
+    {
+      "crpc": "155",
+      "title": "Information as to non-cognizable cases and investigation of such cases",
+      "bnss": "174",
+      "bnss_heading": "Information as to non-cognizable cases and investigation of such cases"
+    },
+    {
+      "crpc": "156",
+      "title": "Police officer's power to investigate cognizable cases",
+      "bnss": "175",
+      "bnss_heading": "Police officer's power to investigate cognizable case"
+    },
+    {
+      "crpc": "157",
+      "title": "Procedure for investigation",
+      "bnss": "176",
+      "bnss_heading": "Procedure for investigation"
+    },
+    {
+      "crpc": "158",
+      "title": "Report how submitted",
+      "bnss": "177",
+      "bnss_heading": "Report how submitted"
+    },
+    {
+      "crpc": "159",
+      "title": "Power to hold investigation or preliminary inquiry",
+      "bnss": "178",
+      "bnss_heading": "Power to hold investigation or preliminary inquiry"
+    },
+    {
+      "crpc": "160",
+      "title": "Police officer's power to require attendance of witnesses",
+      "bnss": "179",
+      "bnss_heading": "Police officer's power to require attendance of witnesses"
+    },
+    {
+      "crpc": "161",
+      "title": "Examination of witnesses by police",
+      "bnss": "180",
+      "bnss_heading": "Examination of witnesses by police"
+    },
+    {
+      "crpc": "162",
+      "title": "Statements to police not to be signed - Use of statements in evidence",
+      "bnss": "181",
+      "bnss_heading": "Statements to police and use thereof"
+    },
+    {
+      "crpc": "163",
+      "title": "No inducement to be offered",
+      "bnss": "182",
+      "bnss_heading": "No inducement to be offered"
+    },
+    {
+      "crpc": "164",
+      "title": "Recording of confessions and statements",
+      "bnss": "183",
+      "bnss_heading": "Recording of confessions and statements"
+    },
+    {
+      "crpc": "164A",
+      "title": "Medical examination of the victim of rape",
+      "bnss": "184",
+      "bnss_heading": "Medical examination of the victim of rape"
+    },
+    {
+      "crpc": "165",
+      "title": "Search by police officer",
+      "bnss": "185",
+      "bnss_heading": "Search by police officer"
+    },
+    {
+      "crpc": "166",
+      "title": "When officer in charge of police station may require another to issue search warrant",
+      "bnss": "186",
+      "bnss_heading": "When officer in charge of police station may require another to issue search-warrant"
+    },
+    {
+      "crpc": "166A",
+      "title": "Letter of request to competent authority for investigation in a country or place outside India",
+      "bnss": "112",
+      "bnss_heading": "Letter of request to competent authority for investigation in a country or place outside India"
+    },
+    {
+      "crpc": "166B",
+      "title": "Letter of request from a country or place outside India to a Court or an authority for investigation in India",
+      "bnss": "113",
+      "bnss_heading": "Letter of request from a country or place outside India to a Court or an authority for investigation in India"
+    },
+    {
+      "crpc": "167",
+      "title": "Procedure when investigation cannot be completed in twenty-four hours",
+      "bnss": "187",
+      "bnss_heading": "Procedure when investigation cannot be completed in twenty-four hours"
+    },
+    {
+      "crpc": "168",
+      "title": "Report of investigation by subordinate police officer",
+      "bnss": "188",
+      "bnss_heading": "Report of investigation by subordinate police officer"
+    },
+    {
+      "crpc": "169",
+      "title": "Release of accused when evidence deficient",
+      "bnss": "189",
+      "bnss_heading": "Release of accused when evidence deficient"
+    },
+    {
+      "crpc": "170",
+      "title": "Cases to be sent to Magistrate when evidence is sufficient",
+      "bnss": "190",
+      "bnss_heading": "Cases to be sent to Magistrate, when evidence is sufficient"
+    },
+    {
+      "crpc": "171",
+      "title": "Complainant and witnesses not to be required to accompany police officer and not to be subjected to restraint",
+      "bnss": "191",
+      "bnss_heading": "Complainant and witnesses not to be required to accompany police officer and not to be subject to restraint"
+    },
+    {
+      "crpc": "172",
+      "title": "Diary of proceedings in investigation",
+      "bnss": "192",
+      "bnss_heading": "Diary of proceedings in investigation"
+    },
+    {
+      "crpc": "173",
+      "title": "Report of police officer on completion of investigation",
+      "bnss": "193",
+      "bnss_heading": "Report of police officer on completion of investigation"
+    },
+    {
+      "crpc": "174",
+      "title": "Police to enquire and report on suicide, etc.",
+      "bnss": "194",
+      "bnss_heading": "Police to enquire and report on suicide, etc."
+    },
+    {
+      "crpc": "175",
+      "title": "Power to summon persons",
+      "bnss": "195",
+      "bnss_heading": "Power to summon persons"
+    },
+    {
+      "crpc": "176",
+      "title": "Inquiry by Magistrate into cause of death",
+      "bnss": "196",
+      "bnss_heading": "Inquiry by Magistrate into cause of death"
+    },
+    {
+      "crpc": "177",
+      "title": "Ordinary place of inquiry and trial",
+      "bnss": "197",
+      "bnss_heading": "Ordinary place of inquiry and trial"
+    },
+    {
+      "crpc": "178",
+      "title": "Place of inquiry or trial",
+      "bnss": "198",
+      "bnss_heading": "Place of inquiry or trial"
+    },
+    {
+      "crpc": "179",
+      "title": "Offence triable where act is done or consequence ensues",
+      "bnss": "199",
+      "bnss_heading": "Offence triable where act is done or consequence ensues"
+    },
+    {
+      "crpc": "180",
+      "title": "Place of trial where act is an offence by reason of relation to other offence",
+      "bnss": "200",
+      "bnss_heading": "Place of trial where act is an offence by reason of relation to other offence"
+    },
+    {
+      "crpc": "181",
+      "title": "Place of trial in case of certain offences",
+      "bnss": "201",
+      "bnss_heading": "Place of trial in case of certain offences"
+    },
+    {
+      "crpc": "182",
+      "title": "Offences committed by letters, etc.",
+      "bnss": "202",
+      "bnss_heading": "Offences committed by means of electronic communications, letters, etc."
+    },
+    {
+      "crpc": "183",
+      "title": "Offence committed on journey or voyage",
+      "bnss": "203",
+      "bnss_heading": "Offence committed on journey or voyage"
+    },
+    {
+      "crpc": "184",
+      "title": "Place of trial for offences triable together",
+      "bnss": "204",
+      "bnss_heading": "Place of trial for offences triable together"
+    },
+    {
+      "crpc": "185",
+      "title": "Power to order cases to be tried in different sessions divisions",
+      "bnss": "205",
+      "bnss_heading": "Power to order cases to be tried in different sessions divisions"
+    },
+    {
+      "crpc": "186",
+      "title": "High Court to decide, in case of doubt, district where inquiry or trial shall take place",
+      "bnss": "206",
+      "bnss_heading": "High Court to decide, in case of doubt, district where inquiry or trial shall take place"
+    },
+    {
+      "crpc": "187",
+      "title": "Power to issue summons or warrant for offence committed beyond local jurisdiction",
+      "bnss": "207",
+      "bnss_heading": "Power to issue summons or warrant for offence committed beyond local jurisdiction"
+    },
+    {
+      "crpc": "188",
+      "title": "Offence committed outside India",
+      "bnss": "208",
+      "bnss_heading": "Offence committed outside India"
+    },
+    {
+      "crpc": "189",
+      "title": "Receipt of evidence relating to offences committed outside India",
+      "bnss": "209",
+      "bnss_heading": "Receipt of evidence relating to offences committed outside India"
+    },
+    {
+      "crpc": "190",
+      "title": "Cognizance of offences by Magistrates",
+      "bnss": "210",
+      "bnss_heading": "Cognizance of offences by Magistrates"
+    },
+    {
+      "crpc": "191",
+      "title": "Transfer on application of the accused",
+      "bnss": "211",
+      "bnss_heading": "Transfer on application of accused"
+    },
+    {
+      "crpc": "192",
+      "title": "Making over of cases to Magistrates",
+      "bnss": "212",
+      "bnss_heading": "Making over of cases to Magistrates"
+    },
+    {
+      "crpc": "193",
+      "title": "Cognizance of offences by Courts of Session",
+      "bnss": "213",
+      "bnss_heading": "Cognizance of offences by Courts of Session"
+    },
+    {
+      "crpc": "194",
+      "title": "Additional and Assistant Sessions Judges to try cases made over to them",
+      "bnss": "214",
+      "bnss_heading": "Additional Sessions Judges to try cases made over to them"
+    },
+    {
+      "crpc": "195",
+      "title": "Prosecution for contempt of lawful authority of public servants for offences against public justice and for offences relating to documents given in evidence",
+      "bnss": "215",
+      "bnss_heading": "Prosecution for contempt of lawful authority of public servants, for offences against public justice and for offences relating to documents given in evidence"
+    },
+    {
+      "crpc": "195A",
+      "title": "Procedure for witnesses in case of threatening, etc.",
+      "bnss": "216",
+      "bnss_heading": "Procedure for witnesses in case of threatening, etc."
+    },
+    {
+      "crpc": "196",
+      "title": "Prosecution for offences against the State and for criminal conspiracy to commit such offence",
+      "bnss": "217",
+      "bnss_heading": "Prosecution for offences against State and for criminal conspiracy to commit such offence"
+    },
+    {
+      "crpc": "197",
+      "title": "Prosecution of Judges and public servants",
+      "bnss": "218",
+      "bnss_heading": "Prosecution of Judges and public servants"
+    },
+    {
+      "crpc": "198",
+      "title": "Prosecution for offences against marriage",
+      "bnss": "219",
+      "bnss_heading": "Prosecution for offences against marriage"
+    },
+    {
+      "crpc": "198A",
+      "title": "Prosecution of offences under section 498A of the Indian Penal Code",
+      "bnss": "220",
+      "bnss_heading": "Prosecution of offences under section 85 of Bharatiya Nyaya Sanhita, 2023"
+    },
+    {
+      "crpc": "198B",
+      "title": "Cognizance of offence",
+      "bnss": "221",
+      "bnss_heading": "Cognizance of offence"
+    },
+    {
+      "crpc": "199",
+      "title": "Prosecution for defamation",
+      "bnss": "222",
+      "bnss_heading": "Prosecution for defamation"
+    },
+    {
+      "crpc": "200",
+      "title": "Examination of complainant",
+      "bnss": "223",
+      "bnss_heading": "Examination of complainant"
+    },
+    {
+      "crpc": "201",
+      "title": "Procedure by Magistrate not competent to take cognizance of the case",
+      "bnss": "224",
+      "bnss_heading": "Procedure by Magistrate not competent to take cognizance of case"
+    },
+    {
+      "crpc": "202",
+      "title": "Postponement of issue of process",
+      "bnss": "225",
+      "bnss_heading": "Postponement of issue of process"
+    },
+    {
+      "crpc": "203",
+      "title": "Dismissal of complaint",
+      "bnss": "226",
+      "bnss_heading": "Dismissal of complaint"
+    },
+    {
+      "crpc": "204",
+      "title": "Issue of process",
+      "bnss": "227",
+      "bnss_heading": "Issue of process"
+    },
+    {
+      "crpc": "205",
+      "title": "Magistrate may dispense with personal attendance of accused",
+      "bnss": "228",
+      "bnss_heading": "Magistrate may dispense with personal attendance of accused"
+    },
+    {
+      "crpc": "206",
+      "title": "Special summons in cases of petty offence",
+      "bnss": "229",
+      "bnss_heading": "Special summons in cases of petty offence"
+    },
+    {
+      "crpc": "207",
+      "title": "Supply to the accused of copy of police report and other documents",
+      "bnss": "230",
+      "bnss_heading": "Supply to accused of copy of police report and other documents"
+    },
+    {
+      "crpc": "208",
+      "title": "Supply of copies of statements and documents to accused in other cases triable by Court of Session",
+      "bnss": "231",
+      "bnss_heading": "Supply of copies of statements and documents to accused in other cases triable by Court of Session"
+    },
+    {
+      "crpc": "209",
+      "title": "Commitment of case to Court of Session when offence is triable exclusively by it",
+      "bnss": "232",
+      "bnss_heading": "Commitment of case to Court of Session when offence is triable exclusively by it"
+    },
+    {
+      "crpc": "210",
+      "title": "Procedure to be followed when there is a complaint case and police investigation in respect of the same offence",
+      "bnss": "233",
+      "bnss_heading": "Procedure to be followed when there is a complaint case and police investigation in respect of the same offence"
+    },
+    {
+      "crpc": "211",
+      "title": "Contents of charge",
+      "bnss": "234",
+      "bnss_heading": "Contents of charge"
+    },
+    {
+      "crpc": "212",
+      "title": "Particulars as to time, place and person",
+      "bnss": "235",
+      "bnss_heading": "Particulars as to time, place and person"
+    },
+    {
+      "crpc": "213",
+      "title": "When manner of committing offence must be stated",
+      "bnss": "236",
+      "bnss_heading": "When manner of committing offence must be stated"
+    },
+    {
+      "crpc": "214",
+      "title": "Words in charge taken in sense of law under which offence is punishable",
+      "bnss": "237",
+      "bnss_heading": "Words in charge taken in sense of law under which offence is punishable"
+    },
+    {
+      "crpc": "215",
+      "title": "Effect of errors",
+      "bnss": "238",
+      "bnss_heading": "Effect of errors"
+    },
+    {
+      "crpc": "216",
+      "title": "Court may alter charge",
+      "bnss": "239",
+      "bnss_heading": "Court may alter charge"
+    },
+    {
+      "crpc": "217",
+      "title": "Recall of witnesses when charge altered",
+      "bnss": "240",
+      "bnss_heading": "Recall of witnesses when charge altered"
+    },
+    {
+      "crpc": "218",
+      "title": "Separate charges for distinct offences",
+      "bnss": "241",
+      "bnss_heading": "Separate charges for distinct offences"
+    },
+    {
+      "crpc": "219",
+      "title": "Three offences of same kind within year may be charged together",
+      "bnss": "242",
+      "bnss_heading": "Offences of same kind within year may be charged together"
+    },
+    {
+      "crpc": "220",
+      "title": "Trial for more than one offence",
+      "bnss": "243",
+      "bnss_heading": "Trial for more than one offence"
+    },
+    {
+      "crpc": "221",
+      "title": "Where it is doubtful what offence has been committed",
+      "bnss": "244",
+      "bnss_heading": "Where it is doubtful what offence has been committed"
+    },
+    {
+      "crpc": "222",
+      "title": "When offence proved included in offence charged",
+      "bnss": "245",
+      "bnss_heading": "When offence proved included in offence charged"
+    },
+    {
+      "crpc": "223",
+      "title": "What persons may be charged jointly",
+      "bnss": "246",
+      "bnss_heading": "What persons may be charged jointly"
+    },
+    {
+      "crpc": "224",
+      "title": "Withdrawal of remaining charges on conviction on one of several charges",
+      "bnss": "247",
+      "bnss_heading": "Withdrawal of remaining charges on conviction on one of several charges"
+    },
+    {
+      "crpc": "225",
+      "title": "Trial to be conducted by Public Prosecutor",
+      "bnss": "248",
+      "bnss_heading": "Trial to be conducted by Public Prosecutor"
+    },
+    {
+      "crpc": "226",
+      "title": "Opening case for prosecution",
+      "bnss": "249",
+      "bnss_heading": "Opening case for prosecution"
+    },
+    {
+      "crpc": "227",
+      "title": "Discharge",
+      "bnss": "250",
+      "bnss_heading": "Discharge"
+    },
+    {
+      "crpc": "228",
+      "title": "Framing of charge",
+      "bnss": "251",
+      "bnss_heading": "Framing of charge"
+    },
+    {
+      "crpc": "229",
+      "title": "Conviction on plea of guilty",
+      "bnss": "252",
+      "bnss_heading": "Conviction on plea of guilty"
+    },
+    {
+      "crpc": "230",
+      "title": "Date for prosecution evidence",
+      "bnss": "253",
+      "bnss_heading": "Date for prosecution evidence"
+    },
+    {
+      "crpc": "231",
+      "title": "Evidence for prosecution",
+      "bnss": "254",
+      "bnss_heading": "Evidence for prosecution"
+    },
+    {
+      "crpc": "232",
+      "title": "Acquittal",
+      "bnss": "255",
+      "bnss_heading": "Acquittal"
+    },
+    {
+      "crpc": "233",
+      "title": "Entering upon defence",
+      "bnss": "256",
+      "bnss_heading": "Entering upon defence"
+    },
+    {
+      "crpc": "234",
+      "title": "Arguments",
+      "bnss": "257",
+      "bnss_heading": "Arguments"
+    },
+    {
+      "crpc": "235",
+      "title": "Judgment of acquittal or conviction",
+      "bnss": "258",
+      "bnss_heading": "Judgment of acquittal or conviction"
+    },
+    {
+      "crpc": "236",
+      "title": "Previous conviction",
+      "bnss": "259",
+      "bnss_heading": "Previous conviction"
+    },
+    {
+      "crpc": "237",
+      "title": "Procedure in cases instituted under section 199(2)",
+      "bnss": "260",
+      "bnss_heading": "Procedure in cases instituted under sub-section (2) of section 222"
+    },
+    {
+      "crpc": "238",
+      "title": "Compliance with section 207",
+      "bnss": "261",
+      "bnss_heading": "Compliance with section 230"
+    },
+    {
+      "crpc": "239",
+      "title": "When accused shall be discharged",
+      "bnss": "262",
+      "bnss_heading": "When accused shall be discharged"
+    },
+    {
+      "crpc": "240",
+      "title": "Framing of charge",
+      "bnss": "263",
+      "bnss_heading": "Framing of charge"
+    },
+    {
+      "crpc": "241",
+      "title": "Conviction on plea of guilty",
+      "bnss": "264",
+      "bnss_heading": "Conviction on plea of guilty"
+    },
+    {
+      "crpc": "242",
+      "title": "Evidence for prosecution",
+      "bnss": "265",
+      "bnss_heading": "Evidence for prosecution"
+    },
+    {
+      "crpc": "243",
+      "title": "Evidence for defence",
+      "bnss": "266",
+      "bnss_heading": "Evidence for defence"
+    },
+    {
+      "crpc": "244",
+      "title": "Evidence for prosecution",
+      "bnss": "267",
+      "bnss_heading": "Evidence for prosecution"
+    },
+    {
+      "crpc": "245",
+      "title": "When accused shall be discharged",
+      "bnss": "268",
+      "bnss_heading": "When accused shall be discharged"
+    },
+    {
+      "crpc": "246",
+      "title": "Procedure where accused is not discharged",
+      "bnss": "269",
+      "bnss_heading": "Procedure where accused is not discharged"
+    },
+    {
+      "crpc": "247",
+      "title": "Evidence for defence",
+      "bnss": "270",
+      "bnss_heading": "Evidence for defence"
+    },
+    {
+      "crpc": "248",
+      "title": "Acquittal or conviction",
+      "bnss": "271",
+      "bnss_heading": "Acquittal or conviction"
+    },
+    {
+      "crpc": "249",
+      "title": "Absence of complainant",
+      "bnss": "272",
+      "bnss_heading": "Absence of complainant"
+    },
+    {
+      "crpc": "250",
+      "title": "Compensation for accusation without reasonable cause",
+      "bnss": "273",
+      "bnss_heading": "Compensation for accusation without reasonable cause"
+    },
+    {
+      "crpc": "251",
+      "title": "Substance of accusation to be stated",
+      "bnss": "274",
+      "bnss_heading": "Substance of accusation to be stated"
+    },
+    {
+      "crpc": "252",
+      "title": "Conviction on plea of guilty",
+      "bnss": "275",
+      "bnss_heading": "Conviction on plea of guilty"
+    },
+    {
+      "crpc": "253",
+      "title": "Conviction on plea of guilty in absence of accused in petty cases",
+      "bnss": "276",
+      "bnss_heading": "Conviction on plea of guilty in absence of accused in petty cases"
+    },
+    {
+      "crpc": "254",
+      "title": "Procedure when not convicted",
+      "bnss": "277",
+      "bnss_heading": "Procedure when not convicted"
+    },
+    {
+      "crpc": "255",
+      "title": "Acquittal or conviction",
+      "bnss": "278",
+      "bnss_heading": "Acquittal or conviction"
+    },
+    {
+      "crpc": "256",
+      "title": "Non-appearance or death of complainant",
+      "bnss": "279",
+      "bnss_heading": "Non-appearance or death of complainant"
+    },
+    {
+      "crpc": "257",
+      "title": "Withdrawal of complaint",
+      "bnss": "280",
+      "bnss_heading": "Withdrawal of complaint"
+    },
+    {
+      "crpc": "258",
+      "title": "Power to stop proceedings in certain cases",
+      "bnss": "281",
+      "bnss_heading": "Power to stop proceedings in certain cases"
+    },
+    {
+      "crpc": "259",
+      "title": "Power of court to convert summons-cases into warrant-cases",
+      "bnss": "282",
+      "bnss_heading": "Power of Court to convert summons-cases into warrant-cases"
+    },
+    {
+      "crpc": "260",
+      "title": "Power to try summarily",
+      "bnss": "283",
+      "bnss_heading": "Power to try summarily"
+    },
+    {
+      "crpc": "261",
+      "title": "Summary trial by Magistrate of the second class",
+      "bnss": "284",
+      "bnss_heading": "Summary trial by Magistrate of second class"
+    },
+    {
+      "crpc": "262",
+      "title": "Procedure for summary trials",
+      "bnss": "285",
+      "bnss_heading": "Procedure for summary trials"
+    },
+    {
+      "crpc": "263",
+      "title": "Record in summary trials",
+      "bnss": "286",
+      "bnss_heading": "Record in summary trials"
+    },
+    {
+      "crpc": "264",
+      "title": "Judgment in cases tried summarily",
+      "bnss": "287",
+      "bnss_heading": "Judgment in cases tried summarily"
+    },
+    {
+      "crpc": "265",
+      "title": "Language of record and judgment",
+      "bnss": "288",
+      "bnss_heading": "Language of record and judgment"
+    },
+    {
+      "crpc": "265A",
+      "title": "Application of the Chapter",
+      "bnss": "289",
+      "bnss_heading": "Application of Chapter"
+    },
+    {
+      "crpc": "265B",
+      "title": "Application for plea bargaining",
+      "bnss": "290",
+      "bnss_heading": "Application for plea bargaining"
+    },
+    {
+      "crpc": "265C",
+      "title": "Guidelines for mutually satisfactory disposition",
+      "bnss": "291",
+      "bnss_heading": "Guidelines for mutually satisfactory disposition"
+    },
+    {
+      "crpc": "265D",
+      "title": "Report of the mutually satisfactory disposition to be submitted before the Court",
+      "bnss": "292",
+      "bnss_heading": "Report of mutually satisfactory disposition to be submitted before Court"
+    },
+    {
+      "crpc": "265E",
+      "title": "Disposal of the case",
+      "bnss": "293",
+      "bnss_heading": "Disposal of case"
+    },
+    {
+      "crpc": "265F",
+      "title": "Judgment of the Court",
+      "bnss": "294",
+      "bnss_heading": "Judgment of Court"
+    },
+    {
+      "crpc": "265G",
+      "title": "Finality of the judgment",
+      "bnss": "295",
+      "bnss_heading": "Finality of judgment"
+    },
+    {
+      "crpc": "265H",
+      "title": "Power of the Court in plea bargaining",
+      "bnss": "296",
+      "bnss_heading": "Power of Court in plea bargaining"
+    },
+    {
+      "crpc": "265-I",
+      "title": "Period of detention undergone by the accused to be set off against the sentence of imprisonment",
+      "bnss": "297",
+      "bnss_heading": "Period of detention undergone by accused to be set off against sentence of imprisonment"
+    },
+    {
+      "crpc": "265J",
+      "title": "Savings",
+      "bnss": "298",
+      "bnss_heading": "Savings"
+    },
+    {
+      "crpc": "265K",
+      "title": "Statements of accused not to be used",
+      "bnss": "299",
+      "bnss_heading": "Statements of accused not to be used"
+    },
+    {
+      "crpc": "265L",
+      "title": "Non-application of the Chapter",
+      "bnss": "300",
+      "bnss_heading": "Non-application of Chapter"
+    },
+    {
+      "crpc": "266",
+      "title": "Definitions",
+      "bnss": "301",
+      "bnss_heading": "Definitions"
+    },
+    {
+      "crpc": "267",
+      "title": "Power to require attendance of prisoners",
+      "bnss": "302",
+      "bnss_heading": "Power to require attendance of prisoners"
+    },
+    {
+      "crpc": "268",
+      "title": "Power of State Government to exclude certain persons from operation of section 267",
+      "bnss": "303",
+      "bnss_heading": "Power of State Government or Central Government to exclude certain persons from operation of section 302"
+    },
+    {
+      "crpc": "269",
+      "title": "Officer-in-charge of prison to abstain from carrying out order in certain contingencies",
+      "bnss": "304",
+      "bnss_heading": "Officer in charge of prison to abstain from carrying out order in certain contingencies"
+    },
+    {
+      "crpc": "270",
+      "title": "Prisoner to be brought to court in custody",
+      "bnss": "305",
+      "bnss_heading": "Prisoner to be brought to Court in custody"
+    },
+    {
+      "crpc": "271",
+      "title": "Power to issue commission for examination of witness in prison",
+      "bnss": "306",
+      "bnss_heading": "Power to issue commission for examination of witness in prison"
+    },
+    {
+      "crpc": "272",
+      "title": "Language of Courts",
+      "bnss": "307",
+      "bnss_heading": "Language of Courts"
+    },
+    {
+      "crpc": "273",
+      "title": "Evidence to be taken in presence of accused",
+      "bnss": "308",
+      "bnss_heading": "Evidence to be taken in presence of accused"
+    },
+    {
+      "crpc": "274",
+      "title": "Record in summons-cases and inquiries",
+      "bnss": "309",
+      "bnss_heading": "Record in summons-cases and inquiries"
+    },
+    {
+      "crpc": "275",
+      "title": "Record in warrant-cases",
+      "bnss": "310",
+      "bnss_heading": "Record in warrant-cases"
+    },
+    {
+      "crpc": "276",
+      "title": "Record in trial before Court of Session",
+      "bnss": "311",
+      "bnss_heading": "Record in trial before Court of Session"
+    },
+    {
+      "crpc": "277",
+      "title": "Language of record of evidence",
+      "bnss": "312",
+      "bnss_heading": "Language of record of evidence"
+    },
+    {
+      "crpc": "278",
+      "title": "Procedure in regard to such evidence when completed",
+      "bnss": "313",
+      "bnss_heading": "Procedure in regard to such evidence when completed"
+    },
+    {
+      "crpc": "279",
+      "title": "Interpretation of evidence to accused or his pleader",
+      "bnss": "314",
+      "bnss_heading": "Interpretation of evidence to accused or his advocate"
+    },
+    {
+      "crpc": "280",
+      "title": "Remarks respecting demeanour of witness",
+      "bnss": "315",
+      "bnss_heading": "Remarks respecting demeanour of witness"
+    },
+    {
+      "crpc": "281",
+      "title": "Record of examination of accused",
+      "bnss": "316",
+      "bnss_heading": "Record of examination of accused"
+    },
+    {
+      "crpc": "282",
+      "title": "Interpreter to be bound to interpret truthfully",
+      "bnss": "317",
+      "bnss_heading": "Interpreter to be bound to interpret truthfully"
+    },
+    {
+      "crpc": "283",
+      "title": "Record in High Court",
+      "bnss": "318",
+      "bnss_heading": "Record in High Court"
+    },
+    {
+      "crpc": "284",
+      "title": "When attendance of witness may be dispensed with and commission issued",
+      "bnss": "319",
+      "bnss_heading": "When attendance of witness may be dispensed with and commission issued"
+    },
+    {
+      "crpc": "285",
+      "title": "Commission to whom to be issued",
+      "bnss": "320",
+      "bnss_heading": "Commission to whom to be issued"
+    },
+    {
+      "crpc": "286",
+      "title": "Execution of commissions",
+      "bnss": "321",
+      "bnss_heading": "Execution of commissions"
+    },
+    {
+      "crpc": "287",
+      "title": "Parties may examine witnesses",
+      "bnss": "322",
+      "bnss_heading": "Parties may examine witnesses"
+    },
+    {
+      "crpc": "288",
+      "title": "Return of commission",
+      "bnss": "323",
+      "bnss_heading": "Return of commission"
+    },
+    {
+      "crpc": "289",
+      "title": "Adjournment of proceeding",
+      "bnss": "324",
+      "bnss_heading": "Adjournment of proceeding"
+    },
+    {
+      "crpc": "290",
+      "title": "Execution of foreign commissions",
+      "bnss": "325",
+      "bnss_heading": "Execution of foreign commissions"
+    },
+    {
+      "crpc": "291",
+      "title": "Deposition of medical witness",
+      "bnss": "326",
+      "bnss_heading": "Deposition of medical witness"
+    },
+    {
+      "crpc": "291A",
+      "title": "Identification report of Magistrate",
+      "bnss": "327",
+      "bnss_heading": "Identification report of Magistrate"
+    },
+    {
+      "crpc": "292",
+      "title": "Evidence of officers of the Mint",
+      "bnss": "328",
+      "bnss_heading": "Evidence of officers of the Mint"
+    },
+    {
+      "crpc": "293",
+      "title": "Reports of certain Government scientific experts",
+      "bnss": "329",
+      "bnss_heading": "Reports of certain Government scientific experts"
+    },
+    {
+      "crpc": "294",
+      "title": "No formal proof of certain documents",
+      "bnss": "330",
+      "bnss_heading": "No formal proof of certain documents"
+    },
+    {
+      "crpc": "295",
+      "title": "Affidavit in proof of conduct of public servants",
+      "bnss": "331",
+      "bnss_heading": "Affidavit in proof of conduct of public servants"
+    },
+    {
+      "crpc": "296",
+      "title": "Evidence of formal character on affidavit",
+      "bnss": "332",
+      "bnss_heading": "Evidence of formal character on affidavit"
+    },
+    {
+      "crpc": "297",
+      "title": "Authorities before whom affidavits may be sworn",
+      "bnss": "333",
+      "bnss_heading": "Authorities before whom affidavits may be sworn"
+    },
+    {
+      "crpc": "298",
+      "title": "Previous conviction or acquittal how proved",
+      "bnss": "334",
+      "bnss_heading": "Previous conviction or acquittal how proved"
+    },
+    {
+      "crpc": "299",
+      "title": "Record of evidence in absence of accused",
+      "bnss": "335",
+      "bnss_heading": "Record of evidence in absence of accused"
+    },
+    {
+      "crpc": "300",
+      "title": "Person once convicted or acquitted not to be tried for same offence",
+      "bnss": "337",
+      "bnss_heading": "Person once convicted or acquitted not to be tried for same offence"
+    },
+    {
+      "crpc": "301",
+      "title": "Appearance by Public Prosecutors",
+      "bnss": "338",
+      "bnss_heading": "Appearance by Public Prosecutors"
+    },
+    {
+      "crpc": "302",
+      "title": "Permission to conduct prosecution",
+      "bnss": "339",
+      "bnss_heading": "Permission to conduct prosecution"
+    },
+    {
+      "crpc": "303",
+      "title": "Right of person against whom proceedings are instituted to be defended",
+      "bnss": "340",
+      "bnss_heading": "Right of person against whom proceedings are instituted to be defended"
+    },
+    {
+      "crpc": "304",
+      "title": "Legal aid to accused at State expense in certain cases",
+      "bnss": "341",
+      "bnss_heading": "Legal aid to accused at State expense in certain cases"
+    },
+    {
+      "crpc": "305",
+      "title": "Procedure when corporation or registered society is an accused",
+      "bnss": "342",
+      "bnss_heading": "Procedure when corporation or registered society is an accused"
+    },
+    {
+      "crpc": "306",
+      "title": "Tender of pardon to accomplice",
+      "bnss": "343",
+      "bnss_heading": "Tender of pardon to accomplice"
+    },
+    {
+      "crpc": "307",
+      "title": "Power to direct tender of pardon",
+      "bnss": "344",
+      "bnss_heading": "Power to direct tender of pardon"
+    },
+    {
+      "crpc": "308",
+      "title": "Trial of person not complying with conditions of pardon",
+      "bnss": "345",
+      "bnss_heading": "Trial of person not complying with conditions of pardon"
+    },
+    {
+      "crpc": "309",
+      "title": "Power to postpone or adjourn proceedings",
+      "bnss": "346",
+      "bnss_heading": "Power to postpone or adjourn proceedings"
+    },
+    {
+      "crpc": "310",
+      "title": "Local inspection",
+      "bnss": "347",
+      "bnss_heading": "Local inspection"
+    },
+    {
+      "crpc": "311",
+      "title": "Power to summon material witness, or examine person present",
+      "bnss": "348",
+      "bnss_heading": "Power to summon material witness, or examine person present"
+    },
+    {
+      "crpc": "311A",
+      "title": "Power of Magistrate to order person to give specimen signatures or handwriting",
+      "bnss": "349",
+      "bnss_heading": "Power of Magistrate to order person to give specimen signatures or handwriting, etc."
+    },
+    {
+      "crpc": "312",
+      "title": "Expenses of complainants and witnesses",
+      "bnss": "350",
+      "bnss_heading": "Expenses of complainants and witnesses"
+    },
+    {
+      "crpc": "313",
+      "title": "Power to examine the accused",
+      "bnss": "351",
+      "bnss_heading": "Power to examine accused"
+    },
+    {
+      "crpc": "314",
+      "title": "Oral arguments and memorandum of arguments",
+      "bnss": "352",
+      "bnss_heading": "Oral arguments and memorandum of arguments"
+    },
+    {
+      "crpc": "315",
+      "title": "Accused person to be competent witness",
+      "bnss": "353",
+      "bnss_heading": "Accused person to be competent witness"
+    },
+    {
+      "crpc": "316",
+      "title": "No influence to be used to induce disclosure",
+      "bnss": "354",
+      "bnss_heading": "No influence to be used to induce disclosure"
+    },
+    {
+      "crpc": "317",
+      "title": "Provision for inquiries and trial being held in the absence of accused in certain cases",
+      "bnss": "355",
+      "bnss_heading": "Provision for inquiries and trial being held in the absence of accused in certain cases"
+    },
+    {
+      "crpc": "318",
+      "title": "Procedure where accused does not understand proceedings",
+      "bnss": "357",
+      "bnss_heading": "Procedure where accused does not understand proceedings"
+    },
+    {
+      "crpc": "319",
+      "title": "Power to proceed against other persons appearing to be guilty of offence",
+      "bnss": "358",
+      "bnss_heading": "Power to proceed against other persons appearing to be guilty of offence"
+    },
+    {
+      "crpc": "320",
+      "title": "Compounding of offences",
+      "bnss": "359",
+      "bnss_heading": "Compounding of offences"
+    },
+    {
+      "crpc": "321",
+      "title": "Withdrawal from prosecution",
+      "bnss": "360",
+      "bnss_heading": "Withdrawal from prosecution"
+    },
+    {
+      "crpc": "322",
+      "title": "Procedure in cases which Magistrate cannot dispose of",
+      "bnss": "361",
+      "bnss_heading": "Procedure in cases which Magistrate cannot dispose of"
+    },
+    {
+      "crpc": "323",
+      "title": "Procedure when, after commencement of inquiry or trial, Magistrate finds case should be committed",
+      "bnss": "362",
+      "bnss_heading": "Procedure when after commencement of inquiry or trial, Magistrate finds case should be committed"
+    },
+    {
+      "crpc": "324",
+      "title": "Trial of persons previously convicted of offences against coinage, stamp-law or property",
+      "bnss": "363",
+      "bnss_heading": "Trial of persons previously convicted of offences against coinage, stamp-law or property"
+    },
+    {
+      "crpc": "325",
+      "title": "Procedure when Magistrate cannot pass sentence sufficiently severe",
+      "bnss": "364",
+      "bnss_heading": "Procedure when Magistrate cannot pass sentence sufficiently severe"
+    },
+    {
+      "crpc": "326",
+      "title": "Conviction or commitment on evidence partly recorded by one Magistrate and partly by another",
+      "bnss": "365",
+      "bnss_heading": "Conviction or commitment on evidence partly recorded by one Magistrate and partly by another"
+    },
+    {
+      "crpc": "327",
+      "title": "Court to be open",
+      "bnss": "366",
+      "bnss_heading": "Court to be open"
+    },
+    {
+      "crpc": "328",
+      "title": "Procedure in case of accused being lunatic",
+      "bnss": "367",
+      "bnss_heading": "Procedure in case of accused being person of unsound mind"
+    },
+    {
+      "crpc": "329",
+      "title": "Procedure in case of person of unsound mind tried before Court",
+      "bnss": "368",
+      "bnss_heading": "Procedure in case of person of unsound mind tried before Court"
+    },
+    {
+      "crpc": "330",
+      "title": "Release of person of unsound mind pending investigation or trial",
+      "bnss": "369",
+      "bnss_heading": "Release of person of unsound mind pending investigation or trial"
+    },
+    {
+      "crpc": "331",
+      "title": "Resumption of inquiry or trial",
+      "bnss": "370",
+      "bnss_heading": "Resumption of inquiry or trial"
+    },
+    {
+      "crpc": "332",
+      "title": "Procedure on accused appearing before Magistrate or Court",
+      "bnss": "371",
+      "bnss_heading": "Procedure on accused appearing before Magistrate or Court"
+    },
+    {
+      "crpc": "333",
+      "title": "When accused appears to have been of sound mind",
+      "bnss": "372",
+      "bnss_heading": "When accused appears to have been of sound mind"
+    },
+    {
+      "crpc": "334",
+      "title": "Judgment of acquittal on ground of unsoundness of mind",
+      "bnss": "373",
+      "bnss_heading": "Judgment of acquittal on ground of unsoundness of mind"
+    },
+    {
+      "crpc": "335",
+      "title": "Person acquitted on such ground to be detained in safe custody",
+      "bnss": "374",
+      "bnss_heading": "Person acquitted on ground of unsoundness of mind to be detained in safe custody"
+    },
+    {
+      "crpc": "336",
+      "title": "Power of State Government to empower officer-in-charge to discharge",
+      "bnss": "375",
+      "bnss_heading": "Power of State Government to empower officer in charge to discharge"
+    },
+    {
+      "crpc": "337",
+      "title": "Procedure where lunatic prisoner is reported capable of making his defence",
+      "bnss": "376",
+      "bnss_heading": "Procedure where prisoner of unsound mind is reported capable of making his defence"
+    },
+    {
+      "crpc": "338",
+      "title": "Procedure where lunatic detained is declared fit to be released",
+      "bnss": "377",
+      "bnss_heading": "Procedure where person of unsound mind detained is declared fit to be released"
+    },
+    {
+      "crpc": "339",
+      "title": "Delivery of lunatic to care of relative or friend",
+      "bnss": "378",
+      "bnss_heading": "Delivery of person of unsound mind to care of relative or friend"
+    },
+    {
+      "crpc": "340",
+      "title": "Procedure in cases mentioned in section 195",
+      "bnss": "379",
+      "bnss_heading": "Procedure in cases mentioned in section 215"
+    },
+    {
+      "crpc": "341",
+      "title": "Appeal",
+      "bnss": "380",
+      "bnss_heading": "Appeal"
+    },
+    {
+      "crpc": "342",
+      "title": "Power to order costs",
+      "bnss": "381",
+      "bnss_heading": "Power to order costs"
+    },
+    {
+      "crpc": "343",
+      "title": "Procedure of Magistrate taking cognizance",
+      "bnss": "382",
+      "bnss_heading": "Procedure of Magistrate taking cognizance"
+    },
+    {
+      "crpc": "344",
+      "title": "Summary procedure for trial for giving false evidence",
+      "bnss": "383",
+      "bnss_heading": "Summary procedure for trial for giving false evidence"
+    },
+    {
+      "crpc": "345",
+      "title": "Procedure in certain cases of contempt",
+      "bnss": "384",
+      "bnss_heading": "Procedure in certain cases of contempt"
+    },
+    {
+      "crpc": "346",
+      "title": "Procedure where Court considers that case should not be dealt with under section 345",
+      "bnss": "385",
+      "bnss_heading": "Procedure where Court considers that case should not be dealt with under section 384"
+    },
+    {
+      "crpc": "347",
+      "title": "When Registrar or Sub-Registrar to be deemed a Civil Court",
+      "bnss": "386",
+      "bnss_heading": "When Registrar or Sub-Registrar to be deemed a Civil Court"
+    },
+    {
+      "crpc": "348",
+      "title": "Discharge of offender on submission of apology",
+      "bnss": "387",
+      "bnss_heading": "Discharge of offender on submission of apology"
+    },
+    {
+      "crpc": "349",
+      "title": "Imprisonment or committal of person refusing to answer or produce document",
+      "bnss": "388",
+      "bnss_heading": "Imprisonment or committal of person refusing to answer or produce document"
+    },
+    {
+      "crpc": "350",
+      "title": "Summary procedure for punishment for non-attendance by a witness in obedience to summons",
+      "bnss": "389",
+      "bnss_heading": "Summary procedure for punishment for non-attendance by a witness in obedience to summons"
+    },
+    {
+      "crpc": "351",
+      "title": "Appeals from convictions under sections 344, 345,",
+      "bnss": "349",
+      "bnss_heading": "and 350 390 Appeals from convictions under sections 383, 384, 388 and 389"
+    },
+    {
+      "crpc": "352",
+      "title": "Certain Judges and Magistrates not to try certain offences when committed before themselves",
+      "bnss": "391",
+      "bnss_heading": "Certain Judges and Magistrates not to try certain offences when committed before themselves"
+    },
+    {
+      "crpc": "353",
+      "title": "Judgment",
+      "bnss": "392",
+      "bnss_heading": "Judgment"
+    },
+    {
+      "crpc": "354",
+      "title": "Language and contents of judgment",
+      "bnss": "393",
+      "bnss_heading": "Language and contents of judgment"
+    },
+    {
+      "crpc": "355",
+      "title": "Metropolitan Magistrate's judgment",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "356",
+      "title": "Order for notifying address of previously convicted offender",
+      "bnss": "394",
+      "bnss_heading": "Order for notifying address of previously convicted offender"
+    },
+    {
+      "crpc": "357",
+      "title": "Order to pay compensation",
+      "bnss": "395",
+      "bnss_heading": "Order to pay compensation"
+    },
+    {
+      "crpc": "357A",
+      "title": "Victim compensation scheme",
+      "bnss": "396",
+      "bnss_heading": "Victim compensation scheme"
+    },
+    {
+      "crpc": "357B",
+      "title": "Compensation to be in addition to fine under section 326A or section 376D of Indian Penal Code",
+      "bnss": "396(7)",
+      "bnss_heading": "Victim compensation scheme"
+    },
+    {
+      "crpc": "357C",
+      "title": "Treatment of victims",
+      "bnss": "397",
+      "bnss_heading": "Treatment of victims"
+    },
+    {
+      "crpc": "358",
+      "title": "Compensation to persons groundlessly arrested",
+      "bnss": "399",
+      "bnss_heading": "Compensation to persons groundlessly arrested"
+    },
+    {
+      "crpc": "359",
+      "title": "Order to pay costs in non-cognizable cases",
+      "bnss": "400",
+      "bnss_heading": "Order to pay costs in non-cognizable cases"
+    },
+    {
+      "crpc": "360",
+      "title": "Order to release on probation of good conduct or after admonition",
+      "bnss": "401",
+      "bnss_heading": "Order to release on probation of good conduct or after admonition"
+    },
+    {
+      "crpc": "361",
+      "title": "Special reasons to be recorded in certain cases",
+      "bnss": "402",
+      "bnss_heading": "Special reasons to be recorded in certain cases"
+    },
+    {
+      "crpc": "362",
+      "title": "Court not to alter judgment",
+      "bnss": "403",
+      "bnss_heading": "Court not to alter judgment"
+    },
+    {
+      "crpc": "363",
+      "title": "Copy of judgment to be given to the accused and other persons",
+      "bnss": "404",
+      "bnss_heading": "Copy of judgment to be given to accused and other persons"
+    },
+    {
+      "crpc": "364",
+      "title": "Judgment when to be translated",
+      "bnss": "405",
+      "bnss_heading": "Judgment when to be translated"
+    },
+    {
+      "crpc": "365",
+      "title": "Court of Session to send copy of finding and sentence to District Magistrate",
+      "bnss": "406",
+      "bnss_heading": "Court of Session to send copy of finding and sentence to District Magistrate"
+    },
+    {
+      "crpc": "366",
+      "title": "Sentence of death to be submitted by Court of Session for confirmation",
+      "bnss": "407",
+      "bnss_heading": "Sentence of death to be submitted by Court of Session for confirmation"
+    },
+    {
+      "crpc": "367",
+      "title": "Power to direct further inquiry to be made or additional evidence to be taken",
+      "bnss": "408",
+      "bnss_heading": "Power to direct further inquiry to be made or additional evidence to be taken"
+    },
+    {
+      "crpc": "368",
+      "title": "Power of High Court to confirm sentence or annul conviction",
+      "bnss": "409",
+      "bnss_heading": "Power of High Court to confirm sentence or annul conviction"
+    },
+    {
+      "crpc": "369",
+      "title": "Confirmation or new sentence to be signed by two Judges",
+      "bnss": "410",
+      "bnss_heading": "Confirmation or new sentence to be signed by two Judges"
+    },
+    {
+      "crpc": "370",
+      "title": "Procedure in case of difference of opinion",
+      "bnss": "411",
+      "bnss_heading": "Procedure in case of difference of opinion"
+    },
+    {
+      "crpc": "371",
+      "title": "Procedure in cases submitted to High Court for confirmation",
+      "bnss": "412",
+      "bnss_heading": "Procedure in cases submitted to High Court for confirmation"
+    },
+    {
+      "crpc": "372",
+      "title": "No appeal to lie unless otherwise provided",
+      "bnss": "413",
+      "bnss_heading": "No appeal to lie unless otherwise provided"
+    },
+    {
+      "crpc": "373",
+      "title": "Appeal from orders requiring security or refusal to accept or rejecting surety for keeping peace or good behaviour",
+      "bnss": "414",
+      "bnss_heading": "Appeal from orders requiring security or refusal to accept or rejecting surety for keeping peace or good behaviour"
+    },
+    {
+      "crpc": "374",
+      "title": "Appeals from convictions",
+      "bnss": "415",
+      "bnss_heading": "Appeals from convictions"
+    },
+    {
+      "crpc": "375",
+      "title": "No appeal in certain cases when accused pleads guilty",
+      "bnss": "416",
+      "bnss_heading": "No appeal in certain cases when accused pleads guilty"
+    },
+    {
+      "crpc": "376",
+      "title": "No appeal in petty cases",
+      "bnss": "417",
+      "bnss_heading": "No appeal in petty cases"
+    },
+    {
+      "crpc": "377",
+      "title": "Appeal by the State Government against sentence",
+      "bnss": "418",
+      "bnss_heading": "Appeal by the State Government against sentence"
+    },
+    {
+      "crpc": "378",
+      "title": "Appeal in case of acquittal",
+      "bnss": "419",
+      "bnss_heading": "Appeal in case of acquittal"
+    },
+    {
+      "crpc": "379",
+      "title": "Appeal against conviction by High Court in certain cases",
+      "bnss": "420",
+      "bnss_heading": "Appeal against conviction by High Court in certain cases"
+    },
+    {
+      "crpc": "380",
+      "title": "Special right of appeal in certain cases",
+      "bnss": "421",
+      "bnss_heading": "Special right of appeal in certain cases"
+    },
+    {
+      "crpc": "381",
+      "title": "Appeal to Court of Session how heard",
+      "bnss": "422",
+      "bnss_heading": "Appeal to Court of Session how heard"
+    },
+    {
+      "crpc": "382",
+      "title": "Petition of appeal",
+      "bnss": "423",
+      "bnss_heading": "Petition of appeal"
+    },
+    {
+      "crpc": "383",
+      "title": "Procedure when appellant in jail",
+      "bnss": "424",
+      "bnss_heading": "Procedure when appellant in jail"
+    },
+    {
+      "crpc": "384",
+      "title": "Summary dismissal of appeal",
+      "bnss": "425",
+      "bnss_heading": "Summary dismissal of appeal"
+    },
+    {
+      "crpc": "385",
+      "title": "Procedure for hearing appeals not dismissed summarily",
+      "bnss": "426",
+      "bnss_heading": "Procedure for hearing appeals not dismissed summarily"
+    },
+    {
+      "crpc": "386",
+      "title": "Powers of the Appellate Court",
+      "bnss": "427",
+      "bnss_heading": "Powers of the Appellate Court"
+    },
+    {
+      "crpc": "387",
+      "title": "Judgments of subordinate Appellate Court",
+      "bnss": "428",
+      "bnss_heading": "Judgments of subordinate Appellate Court"
+    },
+    {
+      "crpc": "388",
+      "title": "Order of High Court on appeal to be certified to lower Court",
+      "bnss": "429",
+      "bnss_heading": "Order of High Court on appeal to be certified to lower Court"
+    },
+    {
+      "crpc": "389",
+      "title": "Suspension of sentence pending the appeal; release of appellant on bail",
+      "bnss": "430",
+      "bnss_heading": "Suspension of sentence pending appeal; release of appellant on bail"
+    },
+    {
+      "crpc": "390",
+      "title": "Arrest of accused in appeal from acquittal",
+      "bnss": "431",
+      "bnss_heading": "Arrest of accused in appeal from acquittal"
+    },
+    {
+      "crpc": "391",
+      "title": "Appellate Court may take further evidence or direct it to be taken",
+      "bnss": "432",
+      "bnss_heading": "Appellate Court may take further evidence or direct it to be taken"
+    },
+    {
+      "crpc": "392",
+      "title": "Procedure where Judges of Court of Appeal are equally divided",
+      "bnss": "433",
+      "bnss_heading": "Procedure where Judges of Court of Appeal are equally divided"
+    },
+    {
+      "crpc": "393",
+      "title": "Finality of judgments and orders on appeal",
+      "bnss": "434",
+      "bnss_heading": "Finality of judgments and orders on appeal"
+    },
+    {
+      "crpc": "394",
+      "title": "Abatement of appeals",
+      "bnss": "435",
+      "bnss_heading": "Abatement of appeals"
+    },
+    {
+      "crpc": "395",
+      "title": "Reference to High Court",
+      "bnss": "436",
+      "bnss_heading": "Reference to High Court"
+    },
+    {
+      "crpc": "396",
+      "title": "Disposal of case according to decision of High Court",
+      "bnss": "437",
+      "bnss_heading": "Disposal of case according to decision of High Court"
+    },
+    {
+      "crpc": "397",
+      "title": "Calling for records to exercise powers of revision",
+      "bnss": "438",
+      "bnss_heading": "Calling for records to exercise powers of revision"
+    },
+    {
+      "crpc": "398",
+      "title": "Power to order inquiry",
+      "bnss": "439",
+      "bnss_heading": "Power to order inquiry"
+    },
+    {
+      "crpc": "399",
+      "title": "Sessions Judge's powers of revision",
+      "bnss": "440",
+      "bnss_heading": "Sessions Judge's powers of revision"
+    },
+    {
+      "crpc": "400",
+      "title": "Power of Additional Sessions Judge",
+      "bnss": "441",
+      "bnss_heading": "Power of Additional Sessions Judge"
+    },
+    {
+      "crpc": "401",
+      "title": "High Court's powers of revision",
+      "bnss": "442",
+      "bnss_heading": "High Court's powers of revision"
+    },
+    {
+      "crpc": "402",
+      "title": "Power of High Court to withdraw or transfer revision cases",
+      "bnss": "443",
+      "bnss_heading": "Power of High Court to withdraw or transfer revision cases"
+    },
+    {
+      "crpc": "403",
+      "title": "Option of Court to hear parties",
+      "bnss": "444",
+      "bnss_heading": "Option of Court to hear parties"
+    },
+    {
+      "crpc": "404",
+      "title": "Statement by Metropolitan Magistrate of grounds of his decision to be considered by High Court",
+      "bnss": null,
+      "bnss_heading": null
+    },
+    {
+      "crpc": "405",
+      "title": "High Court's order to be certified to lower Court",
+      "bnss": "445",
+      "bnss_heading": "High Court's order to be certified to lower Court"
+    },
+    {
+      "crpc": "406",
+      "title": "Power of Supreme Court to transfer cases and appeals",
+      "bnss": "446",
+      "bnss_heading": "Power of Supreme Court to transfer cases and appeals"
+    },
+    {
+      "crpc": "407",
+      "title": "Power of High Court to transfer cases and appeals",
+      "bnss": "447",
+      "bnss_heading": "Power of High Court to transfer cases and appeals"
+    },
+    {
+      "crpc": "408",
+      "title": "Power of Sessions Judge to transfer cases and appeals",
+      "bnss": "448",
+      "bnss_heading": "Power of Sessions Judge to transfer cases and appeals"
+    },
+    {
+      "crpc": "409",
+      "title": "Withdrawal of cases and appeals by Sessions Judges",
+      "bnss": "449",
+      "bnss_heading": "Withdrawal of cases and appeals by Session Judges"
+    },
+    {
+      "crpc": "410",
+      "title": "Withdrawal of cases by Judicial Magistrates",
+      "bnss": "450",
+      "bnss_heading": "Withdrawal of cases by Judicial Magistrates"
+    },
+    {
+      "crpc": "411",
+      "title": "Making over or withdrawal of cases by Executive Magistrates",
+      "bnss": "451",
+      "bnss_heading": "Making over or withdrawal of cases by Executive Magistrates"
+    },
+    {
+      "crpc": "412",
+      "title": "Reasons to be recorded",
+      "bnss": "452",
+      "bnss_heading": "Reasons to be recorded"
+    },
+    {
+      "crpc": "413",
+      "title": "Execution of order passed under section 368",
+      "bnss": "453",
+      "bnss_heading": "Execution of order passed under section 409"
+    },
+    {
+      "crpc": "414",
+      "title": "Execution of sentence of death passed by High Court",
+      "bnss": "454",
+      "bnss_heading": "Execution of sentence of death passed by High Court"
+    },
+    {
+      "crpc": "415",
+      "title": "Postponement of execution of sentence of death in case of appeal to Supreme Court",
+      "bnss": "455",
+      "bnss_heading": "Postponement of execution of sentence of death in case of appeal to Supreme Court"
+    },
+    {
+      "crpc": "416",
+      "title": "Postponement of capital sentence on pregnant woman",
+      "bnss": "456",
+      "bnss_heading": "Commutation of sentence of death on pregnant woman"
+    },
+    {
+      "crpc": "417",
+      "title": "Power to appoint place of imprisonment",
+      "bnss": "457",
+      "bnss_heading": "Power to appoint place of imprisonment"
+    },
+    {
+      "crpc": "418",
+      "title": "Execution of sentence of imprisonment",
+      "bnss": "458",
+      "bnss_heading": "Execution of sentence of imprisonment"
+    },
+    {
+      "crpc": "419",
+      "title": "Direction of warrant for execution",
+      "bnss": "459",
+      "bnss_heading": "Direction of warrant for execution"
+    },
+    {
+      "crpc": "420",
+      "title": "Warrant with whom to be lodged",
+      "bnss": "460",
+      "bnss_heading": "Warrant with whom to be lodged"
+    },
+    {
+      "crpc": "421",
+      "title": "Warrant for levy of fine",
+      "bnss": "461",
+      "bnss_heading": "Warrant for levy of fine"
+    },
+    {
+      "crpc": "422",
+      "title": "Effect of such warrant",
+      "bnss": "462",
+      "bnss_heading": "Effect of such warrant"
+    },
+    {
+      "crpc": "423",
+      "title": "Warrant for levy of fine issued by a Court in any territory to which this Code does not extend",
+      "bnss": "463",
+      "bnss_heading": "Warrant for levy of fine issued by a Court in any territory to which this Sanhita does not extend"
+    },
+    {
+      "crpc": "424",
+      "title": "Suspension of execution of sentence of imprisonment",
+      "bnss": "464",
+      "bnss_heading": "Suspension of execution of sentence of imprisonment"
+    },
+    {
+      "crpc": "425",
+      "title": "Who may issue warrant",
+      "bnss": "465",
+      "bnss_heading": "Who may issue warrant"
+    },
+    {
+      "crpc": "426",
+      "title": "Sentence on escaped convict when to take effect",
+      "bnss": "466",
+      "bnss_heading": "Sentence on escaped convict when to take effect"
+    },
+    {
+      "crpc": "427",
+      "title": "Sentence on offender already sentenced for another offence",
+      "bnss": "467",
+      "bnss_heading": "Sentence on offender already sentenced for another offence"
+    },
+    {
+      "crpc": "428",
+      "title": "Period of detention undergone by the accused to be set off against the sentence of imprisonment",
+      "bnss": "468",
+      "bnss_heading": "Period of detention undergone by the accused to be set off against sentence of imprisonment"
+    },
+    {
+      "crpc": "429",
+      "title": "Saving",
+      "bnss": "469",
+      "bnss_heading": "Saving"
+    },
+    {
+      "crpc": "430",
+      "title": "Return of warrant on execution of sentence",
+      "bnss": "470",
+      "bnss_heading": "Return of warrant on execution of sentence"
+    },
+    {
+      "crpc": "431",
+      "title": "Money ordered to be paid recoverable as a fine",
+      "bnss": "471",
+      "bnss_heading": "Money ordered to be paid recoverable as a fine"
+    },
+    {
+      "crpc": "432",
+      "title": "Power to suspend or remit sentences",
+      "bnss": "473",
+      "bnss_heading": "Power to suspend or remit sentences"
+    },
+    {
+      "crpc": "433",
+      "title": "Power to commute sentence",
+      "bnss": "474",
+      "bnss_heading": "Power to commute sentence"
+    },
+    {
+      "crpc": "433A",
+      "title": "Restriction on powers of remission or commutation in certain cases",
+      "bnss": "475",
+      "bnss_heading": "Restriction on powers of remission or commutation in certain cases"
+    },
+    {
+      "crpc": "434",
+      "title": "Concurrent power of Central Government in case of death sentences",
+      "bnss": "476",
+      "bnss_heading": "Concurrent power of Central Government in case of death sentences"
+    },
+    {
+      "crpc": "435",
+      "title": "State Government to act after consultation with Central Government in certain cases",
+      "bnss": "477",
+      "bnss_heading": "State Government to act after concurrence with Central Government in certain cases"
+    },
+    {
+      "crpc": "436",
+      "title": "In what cases bail to be taken",
+      "bnss": "478",
+      "bnss_heading": "In what cases bail to be taken"
+    },
+    {
+      "crpc": "436A",
+      "title": "Maximum period for which an undertrial prisoner can be detained",
+      "bnss": "479",
+      "bnss_heading": "Maximum period for which undertrial prisoner can be detained"
+    },
+    {
+      "crpc": "437",
+      "title": "When bail may be taken in case of non-bailable offence",
+      "bnss": "480",
+      "bnss_heading": "When bail may be taken in case of non-bailable offence"
+    },
+    {
+      "crpc": "437A",
+      "title": "Bail to require accused to appear before next Appellate Court",
+      "bnss": "481",
+      "bnss_heading": "Bail to require accused to appear before next appellate Court"
+    },
+    {
+      "crpc": "438",
+      "title": "Direction for grant of bail to person apprehending arrest",
+      "bnss": "482",
+      "bnss_heading": "Direction for grant of bail to person apprehending arrest"
+    },
+    {
+      "crpc": "439",
+      "title": "Special powers of High Court or Court of Session regarding bail",
+      "bnss": "483",
+      "bnss_heading": "Special powers of High Court or Court of Session regarding bail"
+    },
+    {
+      "crpc": "440",
+      "title": "Amount of bond and reduction thereof",
+      "bnss": "484",
+      "bnss_heading": "Amount of bond and reduction thereof"
+    },
+    {
+      "crpc": "441",
+      "title": "Bond of accused and sureties",
+      "bnss": "485",
+      "bnss_heading": "Bond of accused and sureties"
+    },
+    {
+      "crpc": "441A",
+      "title": "Declaration by sureties",
+      "bnss": "486",
+      "bnss_heading": "Declaration by sureties"
+    },
+    {
+      "crpc": "442",
+      "title": "Discharge from custody",
+      "bnss": "487",
+      "bnss_heading": "Discharge from custody"
+    },
+    {
+      "crpc": "443",
+      "title": "Power to order sufficient bail when that first taken is insufficient",
+      "bnss": "488",
+      "bnss_heading": "Power to order sufficient bail when that first taken is insufficient"
+    },
+    {
+      "crpc": "444",
+      "title": "Discharge of sureties",
+      "bnss": "489",
+      "bnss_heading": "Discharge of sureties"
+    },
+    {
+      "crpc": "445",
+      "title": "Deposit instead of recognizance",
+      "bnss": "490",
+      "bnss_heading": "Deposit instead of recognizance"
+    },
+    {
+      "crpc": "446",
+      "title": "Procedure when bond has been forfeited",
+      "bnss": "491",
+      "bnss_heading": "Procedure when bond has been forfeited"
+    },
+    {
+      "crpc": "446A",
+      "title": "Cancellation of bond and bail bond",
+      "bnss": "492",
+      "bnss_heading": "Cancellation of bond and bail bond"
+    },
+    {
+      "crpc": "447",
+      "title": "Procedure in case of insolvency or death of surety or when a bond is forfeited",
+      "bnss": "493",
+      "bnss_heading": "Procedure in case of insolvency or death of surety or when a bond is forfeited"
+    },
+    {
+      "crpc": "448",
+      "title": "Bond required from minor",
+      "bnss": "494",
+      "bnss_heading": "Bond required from child"
+    },
+    {
+      "crpc": "449",
+      "title": "Appeal from orders under section 446",
+      "bnss": "495",
+      "bnss_heading": "Appeal from orders under section 491"
+    },
+    {
+      "crpc": "450",
+      "title": "Power to direct levy of amount due on certain recognizances",
+      "bnss": "496",
+      "bnss_heading": "Power to direct levy of amount due on certain recognizances"
+    },
+    {
+      "crpc": "451",
+      "title": "Order for custody and disposal of property pending trial in certain cases",
+      "bnss": "497",
+      "bnss_heading": "Order for custody and disposal of property pending trial in certain cases"
+    },
+    {
+      "crpc": "452",
+      "title": "Order for disposal of property at conclusion of trial",
+      "bnss": "498",
+      "bnss_heading": "Order for disposal of property at conclusion of trial"
+    },
+    {
+      "crpc": "453",
+      "title": "Payment to innocent purchaser of money found on accused",
+      "bnss": "499",
+      "bnss_heading": "Payment to innocent purchaser of money found on accused"
+    },
+    {
+      "crpc": "454",
+      "title": "Appeal against orders under section 452 or section 453",
+      "bnss": "500",
+      "bnss_heading": "Appeal against orders under section 498 or section 499"
+    },
+    {
+      "crpc": "455",
+      "title": "Destruction of libellous and other matter",
+      "bnss": "501",
+      "bnss_heading": "Destruction of libellous and other matter"
+    },
+    {
+      "crpc": "456",
+      "title": "Power to restore possession of immovable property",
+      "bnss": "502",
+      "bnss_heading": "Power to restore possession of immovable property"
+    },
+    {
+      "crpc": "457",
+      "title": "Procedure by police upon seizure of property",
+      "bnss": "503",
+      "bnss_heading": "Procedure by police upon seizure of property"
+    },
+    {
+      "crpc": "458",
+      "title": "Procedure where no claimant appears within six months",
+      "bnss": "504",
+      "bnss_heading": "Procedure where no claimant appears within six months"
+    },
+    {
+      "crpc": "459",
+      "title": "Power to sell perishable property",
+      "bnss": "505",
+      "bnss_heading": "Power to sell perishable property"
+    },
+    {
+      "crpc": "460",
+      "title": "Irregularities which do not vitiate proceedings",
+      "bnss": "506",
+      "bnss_heading": "Irregularities which do not vitiate proceedings"
+    },
+    {
+      "crpc": "461",
+      "title": "Irregularities which vitiate proceedings",
+      "bnss": "507",
+      "bnss_heading": "Irregularities which vitiate proceedings"
+    },
+    {
+      "crpc": "462",
+      "title": "Proceedings in wrong place",
+      "bnss": "508",
+      "bnss_heading": "Proceedings in wrong place"
+    },
+    {
+      "crpc": "463",
+      "title": "Non-compliance with provisions of section 164 or section 281",
+      "bnss": "509",
+      "bnss_heading": "Non-compliance with provisions of section 183 or section 316"
+    },
+    {
+      "crpc": "464",
+      "title": "Effect of omission to frame, or absence of, or error in, charge",
+      "bnss": "510",
+      "bnss_heading": "Effect of omission to frame, or absence of, or error in, charge"
+    },
+    {
+      "crpc": "465",
+      "title": "Finding or sentence when reversible by reason of error, omission or irregularity",
+      "bnss": "511",
+      "bnss_heading": "Finding or sentence when reversible by reason of error, omission or irregularity"
+    },
+    {
+      "crpc": "466",
+      "title": "Defect or error not to make attachment unlawful",
+      "bnss": "512",
+      "bnss_heading": "Defect or error not to make attachment unlawful"
+    },
+    {
+      "crpc": "467",
+      "title": "Definitions",
+      "bnss": "513",
+      "bnss_heading": "Definitions"
+    },
+    {
+      "crpc": "468",
+      "title": "Bar to taking cognizance after lapse of the period of limitation",
+      "bnss": "514",
+      "bnss_heading": "Bar to taking cognizance after lapse of period of limitation"
+    },
+    {
+      "crpc": "469",
+      "title": "Commencement of the period of limitation",
+      "bnss": "515",
+      "bnss_heading": "Commencement of period of limitation"
+    },
+    {
+      "crpc": "470",
+      "title": "Exclusion of time in certain cases",
+      "bnss": "516",
+      "bnss_heading": "Exclusion of time in certain cases"
+    },
+    {
+      "crpc": "471",
+      "title": "Exclusion of date on which Court is closed",
+      "bnss": "517",
+      "bnss_heading": "Exclusion of date on which Court is closed"
+    },
+    {
+      "crpc": "472",
+      "title": "Continuing offence",
+      "bnss": "518",
+      "bnss_heading": "Continuing offence"
+    },
+    {
+      "crpc": "473",
+      "title": "Extension of period of limitation in certain cases",
+      "bnss": "519",
+      "bnss_heading": "Extension of period of limitation in certain cases"
+    },
+    {
+      "crpc": "474",
+      "title": "Trials before High Courts",
+      "bnss": "520",
+      "bnss_heading": "Trials before High Courts"
+    },
+    {
+      "crpc": "475",
+      "title": "Delivery to commanding officers of persons liable to be tried by Court-martial",
+      "bnss": "521",
+      "bnss_heading": "Delivery to commanding officers of persons liable to be tried by Court-martial"
+    },
+    {
+      "crpc": "476",
+      "title": "Forms",
+      "bnss": "522",
+      "bnss_heading": "Forms"
+    },
+    {
+      "crpc": "477",
+      "title": "Power of High Court to make rules",
+      "bnss": "523",
+      "bnss_heading": "Power of High Court to make rules"
+    },
+    {
+      "crpc": "478",
+      "title": "Power to alter functions allotted to Executive Magistrates in certain cases",
+      "bnss": "524",
+      "bnss_heading": "Power to alter functions allocated to Executive Magistrate in certain cases"
+    },
+    {
+      "crpc": "479",
+      "title": "Cases in which Judge or Magistrate is personally interested",
+      "bnss": "525",
+      "bnss_heading": "Cases in which Judge or Magistrate is personally interested"
+    },
+    {
+      "crpc": "480",
+      "title": "Practising pleader not to sit as Magistrate in certain Courts",
+      "bnss": "526",
+      "bnss_heading": "Practising advocate not to sit as Magistrate in certain Courts"
+    },
+    {
+      "crpc": "481",
+      "title": "Public servant concerned in sale not to purchase or bid for property",
+      "bnss": "527",
+      "bnss_heading": "Public servant concerned in sale not to purchase or bid for property"
+    },
+    {
+      "crpc": "482",
+      "title": "Saving of inherent powers of High Court",
+      "bnss": "528",
+      "bnss_heading": "Saving of inherent powers of High Court"
+    },
+    {
+      "crpc": "483",
+      "title": "Duty of High Court to exercise continuous superintendence over Courts of Judicial Magistrates",
+      "bnss": "529",
+      "bnss_heading": "Duty of High Court to exercise continuous superintendence over Courts"
+    },
+    {
+      "crpc": "484",
+      "title": "Repeal and savings",
+      "bnss": "531",
+      "bnss_heading": "Repeal and Savings"
+    }
+  ],
+  "new_in_bnss_no_crpc_predecessor": [
+    {
+      "crpc": "---",
+      "title": "---",
+      "bnss": "472",
+      "bnss_heading": "Mercy Petition in death sentence cases"
+    }
+  ]
+}

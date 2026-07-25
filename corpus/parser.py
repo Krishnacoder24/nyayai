@@ -16,6 +16,7 @@ from corpus.parsers.ipc import IPCParser
 from corpus.parsers.bns import BNSParser
 from corpus.parsers.bnss import BNSSParser
 from corpus.parsers.cpc import CPCParser
+from corpus.parsers.crpc import CRPCParser
 # from corpus.parsers.constitution import ConstitutionParser
 
 _PARSERS = {
@@ -23,6 +24,7 @@ _PARSERS = {
     "BNS": BNSParser(),
     "BNSS": BNSSParser(),
     "CPC": CPCParser(),
+    "CRPC": CRPCParser(),
     # "CONSTITUTION": ConstitutionParser(),
 }
 

@@ -24,7 +24,7 @@ MODEL_NAME = "law-ai/InLegalBERT"
 BATCH_SIZE = 16
 
 # acts for parsing and chunking
-ACTS = ["ipc", "bns", "bnss", "cpc", "constitution"]
+ACTS = ["ipc", "bns", "bnss", "cpc","crpc", "constitution"]
 
 # Rendering constants for anotate_pdf.py, report.py, html_report.py, colors.py
 FILL_ALPHA = 0.35
