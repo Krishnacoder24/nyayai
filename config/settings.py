@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     celery_broker_data_folder: str = str(ROOT_DIR / "data" / "celery" / "broker")
     celery_result_backend: str = f"db+sqlite:///{ROOT_DIR / 'data' / 'celery' / 'results.sqlite'}"
 
+    training_dir: Path = ROOT_DIR / "data" / "training"
+
     # -------------------------
     # Models
     # -------------------------

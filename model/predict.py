@@ -78,32 +78,49 @@ def _load_model_and_tokenizer():
     return model, tokenizer, device
 
 
-def predict(chunks: list[Chunk]) -> list[list[int]]:
+def predict(chunks: list[Chunk], return_logits: bool = False):
     """
     runs inference on a list of chunks from preprocess.py.
     returns a list of label ID sequences, one per chunk, aligned to
     the chunk's token positions (including CLS and SEP positions).
     postprocess.py uses token_to_span to skip the None positions.
+
+    if return_logits=True, additionally returns the raw per-token logits
+    (pre-softmax, one num_labels-length list per token) alongside the
+    label IDs - lets a caller (e.g. postprocess.build_error_spans) compute
+    real per-span confidence instead of its default 1.0 fallback. off by
+    default: most callers (the production pipeline) don't need it, and
+    returning full logits for every token of every chunk is meaningfully
+    more data than just the argmax label IDs.
     """
     if not chunks:
-        return []
+        return ([], []) if return_logits else []
 
     model, tokenizer, device = _load_model_and_tokenizer()
 
     all_label_ids = []
+    all_logits = [] if return_logits else None
 
     for i in range(0, len(chunks), BATCH_SIZE):
         batch_chunks = chunks[i:i + BATCH_SIZE]
-        label_ids = _run_batch(batch_chunks, model, tokenizer, device)
-        all_label_ids.extend(label_ids)
+        if return_logits:
+            label_ids, logits = _run_batch(batch_chunks, model, tokenizer, device, return_logits=True)
+            all_label_ids.extend(label_ids)
+            all_logits.extend(logits)
+        else:
+            label_ids = _run_batch(batch_chunks, model, tokenizer, device)
+            all_label_ids.extend(label_ids)
 
+    if return_logits:
+        return all_label_ids, all_logits
     return all_label_ids
 
 
-def _run_batch(batch_chunks: list[Chunk], model, tokenizer, device) -> list[list[int]]:
+def _run_batch(batch_chunks: list[Chunk], model, tokenizer, device, return_logits: bool = False):
     """
     pads a batch of chunks to the longest sequence in the batch,
-    runs one forward pass, returns per-token label IDs for each chunk.
+    runs one forward pass, returns per-token label IDs for each chunk
+    (and, if return_logits=True, each token's raw logits alongside them).
     padding to the longest in the batch (not always MAX_TOKENS) wastes
     less memory — a batch of short chunks doesn't get padded to 512.
     """
@@ -137,8 +154,13 @@ def _run_batch(batch_chunks: list[Chunk], model, tokenizer, device) -> list[list
     # trim padding back off each sequence before returning
     # each chunk had a different original length, padding was just for batching
     results = []
-    for chunk, pred_seq in zip(batch_chunks, pred_ids):
+    logits_results = [] if return_logits else None
+    for idx, (chunk, pred_seq) in enumerate(zip(batch_chunks, pred_ids)):
         original_len = len(chunk.input_ids)
         results.append(pred_seq[:original_len].tolist())
+        if return_logits:
+            logits_results.append(outputs.logits[idx, :original_len, :].tolist())
 
+    if return_logits:
+        return results, logits_results
     return results
