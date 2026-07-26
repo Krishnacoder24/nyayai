@@ -1,7 +1,7 @@
 /*
   mock data shaped exactly like renderer/report.py's build_report() output -
-  same keys (source_filename, total_errors, errors_by_type, errors[]), same
-  per-error fields (bbox, highlight_color, confidence, etc).
+  same keys (source_filename, total_pages, total_errors, errors_by_type,
+  errors[]), same per-error fields (bbox, highlight_color, confidence, etc).
 
   the point: api.js's real implementation (once api/routes/jobs.py exists)
   just needs to return this same shape, and nothing else in the app changes.
@@ -68,6 +68,7 @@ export function buildMockReport(sourceFilename) {
 
   return {
     source_filename: sourceFilename,
+    total_pages: 2,
     total_errors: errors.length,
     errors_by_type,
     errors,

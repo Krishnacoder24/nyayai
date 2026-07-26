@@ -9,13 +9,18 @@ from dataclasses import asdict
 from model.schemas import ErrorSpan
 
 
-def build_report(errors: list[ErrorSpan], source_filename: str = "") -> dict:
+def build_report(
+    errors: list[ErrorSpan],
+    source_filename: str = "",
+    total_pages: int = 0,
+) -> dict:
     errors_by_type: dict[str, int] = {}
     for error in errors:
         errors_by_type[error.error_type] = errors_by_type.get(error.error_type, 0) + 1
 
     return {
         "source_filename": source_filename,
+        "total_pages": total_pages,
         "total_errors": len(errors),
         "errors_by_type": errors_by_type,
         "errors": [_error_to_dict(e) for e in errors],

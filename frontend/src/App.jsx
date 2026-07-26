@@ -87,6 +87,13 @@ export default function App() {
     }
   }, [jobId])
 
+  // report.total_pages comes straight from renderer/report.py and is known
+  // the instant the report loads - pageInfo.numPages only exists after
+  // pdf.js finishes parsing the file client-side, a moment later. prefer
+  // the backend value; fall back to pdf.js's count if a report predates
+  // this field (e.g. one saved before total_pages was added).
+  const totalPages = report?.total_pages || pageInfo?.numPages || null
+
   const pageErrors = useMemo(
     () => report?.errors.filter((e) => e.page_no === currentPage) ?? [],
     [report, currentPage],
@@ -133,8 +140,8 @@ export default function App() {
           <span className="viewer-page-label">Page {currentPage}</span>
           <button
             type="button"
-            disabled={pageInfo?.numPages != null && currentPage >= pageInfo.numPages}
-            onClick={() => setCurrentPage((p) => p + 1)}
+            disabled={totalPages != null && currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages ?? p + 1, p + 1))}
           >
             Next →
           </button>

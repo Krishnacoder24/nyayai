@@ -29,12 +29,21 @@ from config.constants import FILL_ALPHA, STROKE_ALPHA, STROKE_WIDTH
 
 
 
-def annotate(pdf_path: Path, errors: list[ErrorSpan], output_path: Path) -> None:
-    """reads pdf_path, draws every error's highlight box, writes the result to output_path."""
+def annotate(pdf_path: Path, errors: list[ErrorSpan], output_path: Path) -> int:
+    """
+    reads pdf_path, draws every error's highlight box, writes the result to
+    output_path. returns the total page count - this is already sitting
+    right here in reader.pages, and it's the one place in the whole
+    pipeline that reliably knows it (span-derived counts can silently
+    undercount if noise-filtering strips every span on a page), so callers
+    that need total_pages (see services/analysis.py -> build_report) get
+    it from here instead of opening the PDF a second time.
+    """
     reader = PdfReader(str(pdf_path))
     writer = PdfWriter()
 
     errors_by_page = _group_by_page(errors)
+    total_pages = len(reader.pages)
 
     for page_no, page in enumerate(reader.pages, start=1):
         page_errors = errors_by_page.get(page_no, [])
@@ -48,6 +57,8 @@ def annotate(pdf_path: Path, errors: list[ErrorSpan], output_path: Path) -> None
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "wb") as f:
         writer.write(f)
+
+    return total_pages
 
 
 def _group_by_page(errors: list[ErrorSpan]) -> dict[int, list[ErrorSpan]]:
