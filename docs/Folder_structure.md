@@ -10,7 +10,7 @@ NyayAI/
 ├── .dvcignore
 ├── data.dvc                    # DVC-tracked pointer to data/ - see note above
 ├── Makefile                    # currently only has a test-ocr target
-├── docker-compose.yml          # still defines a redis service left over from before the filesystem-broker decision - unused, pending removal
+├── docker-compose.yml          # qdrant only, no redis service
 ├── test_deps.py                # ad hoc root-level script, not in scripts/ or tests/ - dependency-check smoke test
 ├── test_gpu.py                 # ad hoc root-level script, not in scripts/ or tests/ - GPU/CUDA check
 │
@@ -193,4 +193,3 @@ NyayAI/
   anywhere else in the repo (README, other docs) — worth either
   documenting what it tracks and how to use it, or removing it if it's
   not actually in active use.
-
