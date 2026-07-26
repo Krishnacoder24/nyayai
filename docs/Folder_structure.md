@@ -123,16 +123,16 @@ NyayAI/
 │   │   ├── upload.py                 # POST /upload - validates + enqueues Celery task
 │   │   ├── jobs.py                   # GET /status/{job_id}, GET /result/{job_id}
 │   │   ├── health.py                 # GET /health - checks Qdrant reachability only
-│   │   └── debug.py                  # 0-byte placeholder (docstring only) - NOT wired into main.py,
-│   │                                #   no debug routes actually exist yet
+│   │   └── debug.py                  # GET /debug/queue, POST /debug/jobs/{job_id}/force-status -
+│   │                                #   only mounted when settings.debug is True (see main.py)
 │   ├── schemas/
 │   │   ├── __init__.py
 │   │   ├── upload.py                 # UploadResponse (job_id only)
 │   │   └── response.py               # JobStatusResponse, JobResultResponse - status is Celery's own state literal
 │   └── middleware/
 │       ├── __init__.py
-│       └── timing.py                  # docstring-only stub - NOT added via app.add_middleware(),
-│                                     #   no X-Process-Time header is actually added yet
+│       └── timing.py                  # adds an X-Process-Time header to every response,
+│                                     #   wired in via app.add_middleware() in main.py
 │
 ├── workers/                       # done - filesystem broker + SQLite result backend, NOT Redis
 │   ├── __init__.py

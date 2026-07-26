@@ -237,13 +237,21 @@ rather than only discovering it mid-analysis.
 
 ---
 
-### `/debug/*` — not implemented
+### `/debug/*` — dev-only, gated behind `settings.debug`
 
-`api/routes/debug.py` currently contains only a module docstring
-(`"""Development-only API routes."""`) — no actual `APIRouter`, and it
-isn't imported or mounted in `api/main.py`. There is no
-`GET /debug/spans/{job_id}` or any other debug endpoint live today. This
-is a placeholder for a planned feature, not a working route.
+Only mounted in `api/main.py` when `settings.debug` is `True` (defaults to
+`True` — flip `DEBUG=False` before any non-local deployment, since there's
+no auth on this API to gate these otherwise). Two routes:
+
+- **`GET /debug/queue`** — returns how many tasks are sitting in the
+  filesystem broker's `out/` folder, unpicked by any worker. The
+  filesystem transport has no service to ask for queue depth, so this is
+  a file count, not a broker-reported metric.
+- **`POST /debug/jobs/{job_id}/force-status`** — overwrites a job's status
+  directly in the Celery result backend (`?status=` one of `PENDING`,
+  `STARTED`, `RETRY`, `FAILURE`, `SUCCESS`, `REVOKED`), without actually
+  running the pipeline. Useful for exercising the frontend's polling
+  states on demand instead of waiting on a real document each time.
 
 ---
 
@@ -276,9 +284,8 @@ a display string, not as a stable enum.
 docker-compose up -d qdrant
 ```
 No Redis is required — Celery uses the filesystem broker + SQLite result
-backend (see `config/settings.py` / `workers/celery_app.py`). The current
-`docker-compose.yml` still defines a `redis` service left over from an
-earlier design; it isn't used by anything and is slated for removal.
+backend (see `config/settings.py` / `workers/celery_app.py`). There is no
+`redis` service in `docker-compose.yml`.
 
 **start the API:**
 ```bash
@@ -326,7 +333,6 @@ class Settings(BaseSettings):
 
     qdrant_url: str = "http://localhost:6333"    # alias: QDRANT_URL
     qdrant_collection: str = "legal_corpus"       # alias: QDRANT_COLLECTION
-    redis_url: str = "redis://localhost:6379/0"   # alias: REDIS_URL — unused, pending removal
 
     debug: bool = True   # alias: DEBUG — currently defaults True, worth
                           # flipping to False before any non-local deployment
