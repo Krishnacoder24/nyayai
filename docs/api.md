@@ -237,13 +237,21 @@ rather than only discovering it mid-analysis.
 
 ---
 
-### `/debug/*` — not implemented
+### `/debug/*` — dev-only, gated behind `settings.debug`
 
-`api/routes/debug.py` currently contains only a module docstring
-(`"""Development-only API routes."""`) — no actual `APIRouter`, and it
-isn't imported or mounted in `api/main.py`. There is no
-`GET /debug/spans/{job_id}` or any other debug endpoint live today. This
-is a placeholder for a planned feature, not a working route.
+Only mounted in `api/main.py` when `settings.debug` is `True` (defaults to
+`True` — flip `DEBUG=False` before any non-local deployment, since there's
+no auth on this API to gate these otherwise). Two routes:
+
+- **`GET /debug/queue`** — returns how many tasks are sitting in the
+  filesystem broker's `out/` folder, unpicked by any worker. The
+  filesystem transport has no service to ask for queue depth, so this is
+  a file count, not a broker-reported metric.
+- **`POST /debug/jobs/{job_id}/force-status`** — overwrites a job's status
+  directly in the Celery result backend (`?status=` one of `PENDING`,
+  `STARTED`, `RETRY`, `FAILURE`, `SUCCESS`, `REVOKED`), without actually
+  running the pipeline. Useful for exercising the frontend's polling
+  states on demand instead of waiting on a real document each time.
 
 ---
 
@@ -276,9 +284,8 @@ a display string, not as a stable enum.
 docker-compose up -d qdrant
 ```
 No Redis is required — Celery uses the filesystem broker + SQLite result
-backend (see `config/settings.py` / `workers/celery_app.py`). The current
-`docker-compose.yml` still defines a `redis` service left over from an
-earlier design; it isn't used by anything and is slated for removal.
+backend (see `config/settings.py` / `workers/celery_app.py`). There is no
+`redis` service in `docker-compose.yml`.
 
 **start the API:**
 ```bash
@@ -326,7 +333,6 @@ class Settings(BaseSettings):
 
     qdrant_url: str = "http://localhost:6333"    # alias: QDRANT_URL
     qdrant_collection: str = "legal_corpus"       # alias: QDRANT_COLLECTION
-    redis_url: str = "redis://localhost:6379/0"   # alias: REDIS_URL — unused, pending removal
 
     debug: bool = True   # alias: DEBUG — currently defaults True, worth
                           # flipping to False before any non-local deployment
@@ -390,10 +396,25 @@ data/outputs/{job_id}_report.html
 ```
 
 Flat filenames keyed by `job_id`, all under `services/storage.py` — no
-per-job subdirectory. Both input and output are kept indefinitely; there is
-currently **no cleanup task**. `data/uploads/` and `data/outputs/` will grow
-unbounded over time. This is a known, tracked gap (see the GitHub issue
-tracker) — not implemented yet.
+per-job subdirectory. `scripts/cleanup_outputs.py` deletes files older
+than `settings.output_retention_days` (default 30, `OUTPUT_RETENTION_DAYS`)
+when run — see "housekeeping" below for how to schedule it.
+
+---
+
+## housekeeping
+
+`scripts/cleanup_outputs.py` deletes uploaded PDFs and generated outputs
+older than the configured retention window. There's no Celery beat
+schedule in this project, so it's meant to be invoked periodically from
+outside the app — cron, a systemd timer, etc:
+
+```bash
+uv run python scripts/cleanup_outputs.py              # deletes old files
+uv run python scripts/cleanup_outputs.py --dry-run     # lists what would be deleted, deletes nothing
+uv run python scripts/cleanup_outputs.py --retention-days 7   # override the configured window
+```
+or via the Makefile: `make cleanup-outputs ARGS="--dry-run"`.
 
 ---
 
@@ -401,9 +422,4 @@ tracker) — not implemented yet.
 
 - **No authentication.** Every route is fully public — fine for local
   single-user use, not fine once this is reachable over a network.
-- **No output cleanup task.** Uploads and outputs accumulate forever.
 - **No rate limiting.**
-- **`/debug/*` routes are stubbed, not real.**
-- **Timing middleware (`api/middleware/timing.py`) is a stub** — no
-  `X-Process-Time` header is actually added to responses yet, despite the
-  file's docstring suggesting it should be.

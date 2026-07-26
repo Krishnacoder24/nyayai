@@ -31,8 +31,6 @@ class Settings(BaseSettings):
     celery_broker_url: str = "filesystem://"
     celery_broker_data_folder: str = str(ROOT_DIR / "data" / "celery" / "broker")
     celery_result_backend: str = f"db+sqlite:///{ROOT_DIR / 'data' / 'celery' / 'results.sqlite'}"
-    # celery_uploads_dir: str = str(ROOT_DIR / "data" / "uploads")
-    # celery_outputs_dir: str = str(ROOT_DIR / "data" / "outputs") 
 
     # -------------------------
     # Models
@@ -73,10 +71,19 @@ class Settings(BaseSettings):
         default="legal_corpus",
         alias="QDRANT_COLLECTION",
     )
-    
+
     debug: bool = Field(
         default=True,
         alias="DEBUG",
+    )
+
+    # -------------------------
+    # Housekeeping
+    # -------------------------
+
+    output_retention_days: int = Field(
+        default=30,
+        alias="OUTPUT_RETENTION_DAYS",
     )
 
 

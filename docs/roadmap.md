@@ -107,8 +107,10 @@ start in sequence.
 **general:**
 - no authentication on the API — fine for local use, must be added before
   any deployment (tracked in M6's deployment issue).
-- no output cleanup — `data/uploads/` and `data/outputs/` accumulate
-  indefinitely (tracked in M4).
+- ~~no output cleanup~~ — implemented as `scripts/cleanup_outputs.py`
+  (issue #46): deletes files in `data/uploads/` and `data/outputs/` older
+  than `OUTPUT_RETENTION_DAYS`. cron/timer-invoked, not scheduled
+  automatically inside the app itself.
 - tested only on English-language legal documents — Hindi/regional
   language support is not planned in current scope.
 

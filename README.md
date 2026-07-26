@@ -57,11 +57,9 @@ NyayAI/
 │   ├── citation_checker.py   regex + corpus.search lookup
 │   └── entity_checker.py     spacy NER + rapidfuzz clustering
 │
-├── corpus/                🟡 infra done, act-specific parsers in progress
+├── corpus/                done
 │   ├── schemas.py, chunker.py, embeddings.py, uploader.py, search.py
-│   └── parsers/          one parser per act (no shared base class - each
-│                          act's PDF has different grammar and different
-│                          real-world formatting quirks, see below)
+│   └── parsers/          
 │
 ├── pipeline/             done - merge -> deduplicate -> reading-order sort
 ├── renderer/              done - annotated PDF, colors, JSON + HTML report
@@ -79,7 +77,7 @@ NyayAI/
 │
 ├── train/                   ⬜ not started yet
 ├── config/, data/, scripts/, tests/, docs/
-├── docker-compose.yml        qdrant only (dropping redis - see below)
+├── docker-compose.yml        qdrant only, no redis service
 └── README.md
 ```
 
@@ -211,7 +209,7 @@ pytest tests/ -v
 - [x] React frontend scaffold (PDF.js viewer, mock data)
 - [ ] corpus ingestion - infra done, act-specific parsers in progress
 - [ ] connect frontend to the real API (currently mock data)
-- [ ] drop the now-unused redis service from docker-compose.yml
+- [x] drop the redis service from docker-compose.yml (filesystem + sqlite broker in use)
 - [ ] fine-tune InLegalBERT (need to generate training data first)
 
 ---
@@ -288,8 +286,10 @@ pytest tests/ -v
 - IPC parser still in progress - see "stuff i learned" above for why it's
   taking a while to get right
 - frontend is real now but running on mock data, not the actual backend yet
-- no auth on the API, no cleanup task for old uploads/outputs - both fine for
-  local single-user use, both need fixing before any real deployment
+- no auth on the API - fine for local single-user use, needs fixing before
+  any real deployment. output cleanup exists now (`make cleanup-outputs`,
+  see `scripts/cleanup_outputs.py`) but isn't scheduled automatically -
+  needs a cron entry or systemd timer to actually run periodically.
 
 ---
 

@@ -9,7 +9,7 @@ NyayAI/
 ├── .dvc/                       # DVC metadata - present but not documented anywhere else; confirm intended usage
 ├── .dvcignore
 ├── data.dvc                    # DVC-tracked pointer to data/ - see note above
-├── Makefile                    # currently only has a test-ocr target
+├── Makefile                    # test-ocr and cleanup-outputs targets
 ├── docker-compose.yml          # qdrant only, no redis service
 ├── test_deps.py                # ad hoc root-level script, not in scripts/ or tests/ - dependency-check smoke test
 ├── test_gpu.py                 # ad hoc root-level script, not in scripts/ or tests/ - GPU/CUDA check
@@ -17,9 +17,6 @@ NyayAI/
 ├── config/
 │   ├── __init__.py
 │   ├── settings.py             # pydantic BaseSettings, all env vars in one place
-│   │                            #   NOTE: currently has ~30 lines of leftover scratch
-│   │                            #   notes + a duplicate BASE_DIR definition appended
-│   │                            #   below the real Settings class - needs cleanup
 │   ├── log_config.py           # logging setup (NOT logging.py - shadows stdlib)
 │   └── constants.py            # MAX_UPLOAD_BYTES, ERROR_COLORS, MODEL_NAME, BATCH_SIZE, etc.
 │
@@ -123,16 +120,16 @@ NyayAI/
 │   │   ├── upload.py                 # POST /upload - validates + enqueues Celery task
 │   │   ├── jobs.py                   # GET /status/{job_id}, GET /result/{job_id}
 │   │   ├── health.py                 # GET /health - checks Qdrant reachability only
-│   │   └── debug.py                  # 0-byte placeholder (docstring only) - NOT wired into main.py,
-│   │                                #   no debug routes actually exist yet
+│   │   └── debug.py                  # GET /debug/queue, POST /debug/jobs/{job_id}/force-status -
+│   │                                #   only mounted when settings.debug is True (see main.py)
 │   ├── schemas/
 │   │   ├── __init__.py
 │   │   ├── upload.py                 # UploadResponse (job_id only)
 │   │   └── response.py               # JobStatusResponse, JobResultResponse - status is Celery's own state literal
 │   └── middleware/
 │       ├── __init__.py
-│       └── timing.py                  # docstring-only stub - NOT added via app.add_middleware(),
-│                                     #   no X-Process-Time header is actually added yet
+│       └── timing.py                  # adds an X-Process-Time header to every response,
+│                                     #   wired in via app.add_middleware() in main.py
 │
 ├── workers/                       # done - filesystem broker + SQLite result backend, NOT Redis
 │   ├── __init__.py
@@ -157,7 +154,7 @@ NyayAI/
 │       └── UploadPage.jsx
 │
 ├── data/
-│   ├── uploads/                     # gitignored - no cleanup task yet, grows unbounded
+│   ├── uploads/                     # gitignored - cleaned up by scripts/cleanup_outputs.py (OUTPUT_RETENTION_DAYS)
 │   ├── outputs/                     # gitignored - same
 │   ├── training/                    # train.jsonl, val.jsonl, test.jsonl - gitignored, not yet generated
 │   ├── cache/                       # model cache - gitignored
@@ -176,7 +173,8 @@ NyayAI/
 │
 ├── scripts/
 │   ├── ingest_corpus.py               # thin wrapper: corpus/ingest.py
-│   └── generate_data.py               # synthetic training data corruption - not yet run
+│   ├── generate_data.py               # synthetic training data corruption - not yet run
+│   └── cleanup_outputs.py             # deletes uploads/outputs older than OUTPUT_RETENTION_DAYS - cron/timer-invoked, --dry-run flag
 │
 └── docs/
     ├── architecture.md
