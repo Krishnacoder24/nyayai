@@ -195,9 +195,8 @@ response detail in `docs/api.md`.
 
 ### `workers/`
 Celery, using the **filesystem transport as broker + SQLite as result
-backend** — no Redis, despite `docker-compose.yml` still defining a Redis
-service left over from an earlier design. `tasks.py`'s `process_pdf` task
-calls `services.analysis.AnalysisService`. **Both the API process and the
+backend** — no Redis, and `docker-compose.yml` no longer defines a Redis
+service. `tasks.py`'s `process_pdf` task calls `services.analysis.AnalysisService`. **Both the API process and the
 worker process must resolve `BASE_DIR` to the same absolute path** — if
 they're launched from different working directories with a relative path
 anywhere in the settings, tasks silently queue forever with no error. The
@@ -318,8 +317,7 @@ the pipeline, not the wire format.
 - **No Redis required.** Celery's filesystem broker + SQLite result
   backend are both plain local files under `data/celery/` — this is a
   deliberate choice to avoid an extra service for a single-machine local
-  tool. `docker-compose.yml` still defines a Redis service from before
-  this decision; it's unused and slated for removal.
+  tool. `docker-compose.yml` has no Redis service.
 
 ---
 

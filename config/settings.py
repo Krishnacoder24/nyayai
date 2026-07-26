@@ -73,12 +73,7 @@ class Settings(BaseSettings):
         default="legal_corpus",
         alias="QDRANT_COLLECTION",
     )
-
-    redis_url: str = Field(
-        default="redis://localhost:6379/0",
-        alias="REDIS_URL",
-    )
-
+    
     debug: bool = Field(
         default=True,
         alias="DEBUG",
