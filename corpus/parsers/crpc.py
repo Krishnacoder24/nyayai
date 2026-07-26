@@ -506,6 +506,26 @@ def _drop_blank_lines(text: str) -> str:
 
 
 
+# marks the start of a state-specific amendment block, interleaved
+# directly in the body between one section's real end and the next
+# section's start - NOT a footnote, NOT bracketed, just plain uppercase
+# body text (e.g. "STATE AMENDMENT\nHaryana\nIn the Code of..."). CAUTION
+# was flagged and left unhandled in an earlier draft of this file (see
+# git history) - confirmed via direct execution against the real PDF
+# that a section's real content ALWAYS ends cleanly before the first
+# "STATE AMENDMENT"/"STATE AMENDMENTS" occurrence within its own matched
+# range (both header spellings appear in the wild - confirmed 6
+# sections use the plural "STATE AMENDMENTS", e.g. 125, 127, 167), and
+# real central-act text never resumes after it within that same section
+# (checked section 24, which has TWO separate "STATE AMENDMENT" blocks
+# back to back - Karnataka/Maharashtra/Madhya Pradesh/West Bengal x2,
+# then a second header for Jammu and Kashmir - with no real Act text
+# between or after them). safe to truncate a section's body at the
+# FIRST occurrence of this marker within its own range, same idea as
+# BODY_END_MARKER-style truncation elsewhere in the other act parsers.
+STATE_AMENDMENT_BLOCK = re.compile(r'\n\s*STATE AMENDMENTS?\s*\n')
+
+
 # TOC titles that mean "this section has no body text at all" - same
 # generic, title-text-driven mechanism as IPC. not yet confirmed which
 # (if any) CrPC sections are actually omitted/repealed in the TOC - the
@@ -639,6 +659,15 @@ class CRPCParser:
             entry = toc_entries[i]
             body_start = match.end()
             body_end = matched_positions[pos + 1][1].start() if pos + 1 < len(matched_positions) else len(body_text)
+
+            # cut off state-specific amendment text before it ever
+            # becomes part of the stored body - see STATE_AMENDMENT_BLOCK's
+            # comment for why the FIRST occurrence within this range is
+            # always the right cutoff point.
+            state_amendment_match = STATE_AMENDMENT_BLOCK.search(body_text, body_start, body_end)
+            if state_amendment_match:
+                body_end = state_amendment_match.start()
+
             body = body_text[body_start:body_end].strip()
 
             chapter = CRPCParser._label_for_position(chapters, match.start())
