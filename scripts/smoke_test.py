@@ -42,10 +42,10 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
 
     annotated_path = args.out / f"{args.pdf.stem}_annotated.pdf"
-    annotate(args.pdf, errors, annotated_path)
+    total_pages = annotate(args.pdf, errors, annotated_path)
     print(f"annotated PDF: {annotated_path}")
 
-    report = build_report(errors, source_filename=args.pdf.name)
+    report = build_report(errors, source_filename=args.pdf.name, total_pages=total_pages)
     report_path = args.out / f"{args.pdf.stem}_report.html"
     render_html(report, report_path)
     print(f"HTML report: {report_path}")

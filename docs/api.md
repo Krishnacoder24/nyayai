@@ -422,4 +422,9 @@ or via the Makefile: `make cleanup-outputs ARGS="--dry-run"`.
 
 - **No authentication.** Every route is fully public — fine for local
   single-user use, not fine once this is reachable over a network.
+- **No output cleanup task.** Uploads and outputs accumulate forever.
 - **No rate limiting.**
+- **`/debug/*` routes are stubbed, not real.**
+- **Timing middleware (`api/middleware/timing.py`) is a stub** — no
+  `X-Process-Time` header is actually added to responses yet, despite the
+  file's docstring suggesting it should be.
