@@ -36,9 +36,9 @@ def run_analysis(job_id: str) -> dict:
     spans = extract(pdf_path)
     errors = analyze(spans)
 
-    annotate(pdf_path, errors, annotated_pdf_path(job_id))
+    total_pages = annotate(pdf_path, errors, annotated_pdf_path(job_id))
 
-    report = build_report(errors, source_filename=source_filename)
+    report = build_report(errors, source_filename=source_filename, total_pages=total_pages)
     report_json_path(job_id).parent.mkdir(parents=True, exist_ok=True)
     report_json_path(job_id).write_text(json.dumps(report, indent=2))
 
