@@ -396,10 +396,25 @@ data/outputs/{job_id}_report.html
 ```
 
 Flat filenames keyed by `job_id`, all under `services/storage.py` — no
-per-job subdirectory. Both input and output are kept indefinitely; there is
-currently **no cleanup task**. `data/uploads/` and `data/outputs/` will grow
-unbounded over time. This is a known, tracked gap (see the GitHub issue
-tracker) — not implemented yet.
+per-job subdirectory. `scripts/cleanup_outputs.py` deletes files older
+than `settings.output_retention_days` (default 30, `OUTPUT_RETENTION_DAYS`)
+when run — see "housekeeping" below for how to schedule it.
+
+---
+
+## housekeeping
+
+`scripts/cleanup_outputs.py` deletes uploaded PDFs and generated outputs
+older than the configured retention window. There's no Celery beat
+schedule in this project, so it's meant to be invoked periodically from
+outside the app — cron, a systemd timer, etc:
+
+```bash
+uv run python scripts/cleanup_outputs.py              # deletes old files
+uv run python scripts/cleanup_outputs.py --dry-run     # lists what would be deleted, deletes nothing
+uv run python scripts/cleanup_outputs.py --retention-days 7   # override the configured window
+```
+or via the Makefile: `make cleanup-outputs ARGS="--dry-run"`.
 
 ---
 

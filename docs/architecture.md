@@ -361,8 +361,6 @@ only surya OCR and InLegalBERT inference touch the GPU.
   corpus's `replaced_by` metadata).
 - no authentication on the API — fine for local use, must be added before
   any deployment.
-- no output cleanup — `data/uploads/` and `data/outputs/` accumulate
-  indefinitely.
 - no real automated test suite yet — most test files are stubs.
 
 The authoritative, up-to-date list of everything above (with GitHub issue

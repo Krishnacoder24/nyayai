@@ -9,7 +9,7 @@ NyayAI/
 ├── .dvc/                       # DVC metadata - present but not documented anywhere else; confirm intended usage
 ├── .dvcignore
 ├── data.dvc                    # DVC-tracked pointer to data/ - see note above
-├── Makefile                    # currently only has a test-ocr target
+├── Makefile                    # test-ocr and cleanup-outputs targets
 ├── docker-compose.yml          # qdrant only, no redis service
 ├── test_deps.py                # ad hoc root-level script, not in scripts/ or tests/ - dependency-check smoke test
 ├── test_gpu.py                 # ad hoc root-level script, not in scripts/ or tests/ - GPU/CUDA check
@@ -17,9 +17,6 @@ NyayAI/
 ├── config/
 │   ├── __init__.py
 │   ├── settings.py             # pydantic BaseSettings, all env vars in one place
-│   │                            #   NOTE: currently has ~30 lines of leftover scratch
-│   │                            #   notes + a duplicate BASE_DIR definition appended
-│   │                            #   below the real Settings class - needs cleanup
 │   ├── log_config.py           # logging setup (NOT logging.py - shadows stdlib)
 │   └── constants.py            # MAX_UPLOAD_BYTES, ERROR_COLORS, MODEL_NAME, BATCH_SIZE, etc.
 │
@@ -157,7 +154,7 @@ NyayAI/
 │       └── UploadPage.jsx
 │
 ├── data/
-│   ├── uploads/                     # gitignored - no cleanup task yet, grows unbounded
+│   ├── uploads/                     # gitignored - cleaned up by scripts/cleanup_outputs.py (OUTPUT_RETENTION_DAYS)
 │   ├── outputs/                     # gitignored - same
 │   ├── training/                    # train.jsonl, val.jsonl, test.jsonl - gitignored, not yet generated
 │   ├── cache/                       # model cache - gitignored
@@ -176,7 +173,8 @@ NyayAI/
 │
 ├── scripts/
 │   ├── ingest_corpus.py               # thin wrapper: corpus/ingest.py
-│   └── generate_data.py               # synthetic training data corruption - not yet run
+│   ├── generate_data.py               # synthetic training data corruption - not yet run
+│   └── cleanup_outputs.py             # deletes uploads/outputs older than OUTPUT_RETENTION_DAYS - cron/timer-invoked, --dry-run flag
 │
 └── docs/
     ├── architecture.md
