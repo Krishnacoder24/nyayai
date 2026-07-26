@@ -15,7 +15,15 @@ empirically tuned for this specific task - this hasn't been run yet.
 adjust batch size / gradient accumulation first if it doesn't fit in 6GB.
 """
 
+import hashlib
+import json
 import logging
+import subprocess
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+from config.settings import settings
 
 from transformers import (
     AutoTokenizer,
@@ -36,8 +44,8 @@ logger = logging.getLogger(__name__)
 BASE_CHECKPOINT = settings.bert_checkpoint
 OUTPUT_DIR = settings.checkpoint_dir
 
-TRAIN_JSONL = "data/training/train.jsonl"
-VAL_JSONL = "data/training/val.jsonl"
+TRAIN_JSONL = settings.training_dir / "train.jsonl"
+VAL_JSONL = settings.training_dir / "val.jsonl"
 
 # starting point, not yet empirically tuned - this project's known 6GB VRAM
 # constraint (RTX 4050) is why batch size is small with gradient
@@ -51,7 +59,103 @@ WARMUP_RATIO = 0.1
 WEIGHT_DECAY = 0.01
 
 
+def _git_commit() -> Optional[str]:
+    """same technique as scripts/generate_data.py's own manifest - silently
+    None if git isn't available or this isn't a checkout, never raises
+    (a missing git binary shouldn't block a training run)."""
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except Exception:
+        return None
+
+
+def _sha256_of_file(path: str) -> Optional[str]:
+    """checksums train.jsonl/val.jsonl as they ACTUALLY exist right now,
+    rather than trusting generate_data.py's manifest.json to still be
+    accurate - if the data was regenerated (or hand-edited) after that
+    manifest was written but generate_data.py wasn't rerun again, this
+    still correctly records what THIS training run actually consumed."""
+    p = Path(path)
+    if not p.exists():
+        return None
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _gpu_info() -> dict:
+    try:
+        import torch
+        if torch.cuda.is_available():
+            props = torch.cuda.get_device_properties(0)
+            return {
+                "device": torch.cuda.get_device_name(0),
+                "vram_total_gb": round(props.total_memory / (1024 ** 3), 2),
+            }
+    except Exception:
+        pass
+    return {"device": "cpu", "vram_total_gb": None}
+
+
+def _generate_training_manifest(
+    output_dir: str,
+    train_examples: int,
+    val_examples: int,
+    training_seconds: float,
+    trainer: Trainer,
+) -> None:
+    """writes training_manifest.json alongside the saved checkpoint - same
+    provenance discipline scripts/generate_data.py already applies to the
+    training DATA (git commit, checksums, full config), applied here to
+    the one artifact in this pipeline that was missing it: the checkpoint
+    itself. without this, "which data and which code produced this exact
+    model/checkpoint/" is only answerable from memory six months from now.
+    """
+    manifest = {
+        "generated_at": datetime.now().isoformat(),
+        "git_commit": _git_commit(),
+        "base_checkpoint": BASE_CHECKPOINT,
+        "training_data": {
+            "train_jsonl": str(TRAIN_JSONL),
+            "train_jsonl_sha256": _sha256_of_file(str(TRAIN_JSONL)),
+            "train_examples": train_examples,
+            "val_jsonl": str(VAL_JSONL),
+            "val_jsonl_sha256": _sha256_of_file(str(VAL_JSONL)),
+            "val_examples": val_examples,
+        },
+        "hyperparameters": {
+            "per_device_batch_size": PER_DEVICE_BATCH_SIZE,
+            "gradient_accumulation_steps": GRADIENT_ACCUMULATION_STEPS,
+            "effective_batch_size": PER_DEVICE_BATCH_SIZE * GRADIENT_ACCUMULATION_STEPS,
+            "num_epochs": NUM_EPOCHS,
+            "learning_rate": LEARNING_RATE,
+            "warmup_ratio": WARMUP_RATIO,
+            "weight_decay": WEIGHT_DECAY,
+            "fp16": True,
+        },
+        "hardware": _gpu_info(),
+        "training_duration_seconds": round(training_seconds, 1),
+        "best_metric": trainer.state.best_metric,
+        "best_model_checkpoint": trainer.state.best_model_checkpoint,
+        # full per-epoch train/eval loss + F1 history, not just the final
+        # number - lets you actually look at the loss curves later (see
+        # overfitting concern) without needing to have watched the logs live
+        "log_history": trainer.state.log_history,
+    }
+
+    manifest_path = Path(output_dir) / "training_manifest.json"
+    with open(manifest_path, "w") as f:
+        json.dump(manifest, f, indent=2, default=str)
+    logger.info(f"wrote training manifest to {manifest_path}")
+
+
 def main():
+    start_time = time.time()
+
     tokenizer = AutoTokenizer.from_pretrained(BASE_CHECKPOINT)
 
     train_dataset = load_dataset(TRAIN_JSONL, tokenizer)
@@ -67,7 +171,7 @@ def main():
     )
 
     training_args = TrainingArguments(
-        output_dir=OUTPUT_DIR,
+        output_dir=str(OUTPUT_DIR),
         per_device_train_batch_size=PER_DEVICE_BATCH_SIZE,
         per_device_eval_batch_size=PER_DEVICE_BATCH_SIZE,
         gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
@@ -99,9 +203,12 @@ def main():
     # trainer.train() with load_best_model_at_end=True leaves the BEST
     # checkpoint (by eval f1) loaded in trainer.model, not just the last
     # epoch's - save_model() persists that best version
-    trainer.save_model(OUTPUT_DIR)
+    trainer.save_model(str(OUTPUT_DIR))
     tokenizer.save_pretrained(OUTPUT_DIR)  # predict.py loads the tokenizer from here too
     logger.info(f"saved best checkpoint (by eval f1) to {OUTPUT_DIR}")
+
+    training_seconds = time.time() - start_time
+    _generate_training_manifest(str(OUTPUT_DIR), len(train_dataset), len(val_dataset), training_seconds, trainer)
 
 
 if __name__ == "__main__":

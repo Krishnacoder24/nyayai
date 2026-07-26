@@ -26,7 +26,7 @@ from config.settings import settings
 logger = logging.getLogger(__name__)
 
 CHECKPOINT_DIR = settings.checkpoint_dir
-TEST_JSONL = "data/training/test.jsonl"
+TEST_JSONL = settings.training_dir / "test.jsonl"
 BATCH_SIZE = 16
 
 
@@ -62,7 +62,7 @@ def main():
     report = full_report(all_true, all_pred)
     print(report)
 
-    with open("data/training/eval_report.txt", "w") as f:
+    with open(settings.training_dir / "eval_report.txt", "w") as f:
         f.write(report)
 
 
