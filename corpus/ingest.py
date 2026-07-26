@@ -35,6 +35,9 @@ def ingest_act(act: str, force: bool = False, embedder: PassageEmbedder | None =
 
 def _find_pdf(act: str) -> Path:
     act_dir = SOURCE_DIR / act.lower()
+    if not act_dir.exists():
+        raise FileNotFoundError(f"directory {act_dir} does not exist")
+
     pdfs = list(act_dir.glob("*.pdf"))
     if not pdfs:
         raise FileNotFoundError(f"no PDF found in {act_dir}")

@@ -3,7 +3,7 @@ thin CLI wrapper around corpus/ingest.py.
 
 usage:
     uv run python scripts/ingest_corpus.py --act ipc
-    uv run python scripts/ingest_corpus.py --act bns --force
+    uv run python scripts/ingest_corpus.py --act BNS --force
     uv run python scripts/ingest_corpus.py --all
 """
 
@@ -13,12 +13,13 @@ from corpus.ingest import ingest_act
 from corpus.embeddings import PassageEmbedder
 from config.constants import ACTS
 
-ALL_ACTS = ACTS
+ALL_ACTS = [act.lower() for act in ACTS]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--act", choices=ALL_ACTS)
+    # type=str.lower allows case-insensitive CLI inputs (e.g., --act IPC or --act ipc)
+    parser.add_argument("--act", type=str.lower, choices=ALL_ACTS)
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()

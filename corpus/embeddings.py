@@ -6,13 +6,12 @@ standard trick for pulling a "sentence embedding" out of a BERT-family
 model that wasn't specifically trained with a pooling objective.
 """
 
-# from asyncio import constants
-
 import torch
 from transformers import AutoTokenizer, AutoModel
 
 from corpus.schemas import Passage
 from config import constants
+
 MODEL_NAME = constants.MODEL_NAME  # "inLegalBERT" - a BERT model trained on Indian legal text
 BATCH_SIZE = constants.BATCH_SIZE  # same 6GB VRAM discipline as OCR/model inference - keep it small
 
@@ -20,6 +19,7 @@ BATCH_SIZE = constants.BATCH_SIZE  # same 6GB VRAM discipline as OCR/model infer
 class PassageEmbedder:
     def __init__(self, device: str | None = None):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        print("PassageEmbedder using device:", self.device)
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
         self.model = AutoModel.from_pretrained(MODEL_NAME).to(self.device)
         self.model.eval()
@@ -33,7 +33,8 @@ class PassageEmbedder:
 
             inputs = self.tokenizer(
                 texts, padding=True, truncation=True, max_length=512, return_tensors="pt"
-            ).to(self.device)
+            )
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
             outputs = self.model(**inputs)
             cls_vectors = outputs.last_hidden_state[:, 0, :]  # [CLS] token per sequence
