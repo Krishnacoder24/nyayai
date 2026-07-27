@@ -298,3 +298,20 @@ See `docs/architecture.md` for the full frozen folder structure.
 - [InLegalBERT](https://huggingface.co/law-ai/InLegalBERT)
 - [surya OCR](https://github.com/VikParuchuri/surya)
 - [IndiaCode](https://indiacode.nic.in) - source for IPC, BNS, BNSS, Constitution, CPC PDFs
+
+<!-- After every new training run
+  # Train model
+
+dvc add model/checkpoint
+git add model/checkpoint.dvc
+git commit -m "Update model checkpoint"
+dvc push
+git push
+
+ -->
+
+ <!-- on anohter machine
+ git clone <repo>
+ uv sync
+ dvc pull 
+ -->
