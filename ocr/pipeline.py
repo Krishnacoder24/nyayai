@@ -7,7 +7,7 @@ in one pass, then only calls surya on pages that actually need it.
 import re
 from pathlib import Path
 from typing import List, Optional
-from config.constants import MIN_LINES_PER_PAGE, MAX_SCANNED_INDICATORS
+from config.constants import MIN_CHARS_PER_PAGE,MIN_LINES_PER_PAGE, MAX_SCANNED_INDICATORS
 
 from ocr.tokens import LineSpan, sort_spans_by_reading_order
 from ocr.router import route
@@ -15,7 +15,9 @@ from ocr.router import route
 
 def extract(
     pdf_path: Path, 
-    min_chars_per_page: int = 2000,
+    min_chars_per_page: int = MIN_CHARS_PER_PAGE,
+    min_lines_per_page: int = MIN_LINES_PER_PAGE,
+    max_scanned_indicators: int = MAX_SCANNED_INDICATORS,
     filter_noise: bool = True,
     detect_headings: bool = True,
 ) -> list[LineSpan]:
@@ -25,6 +27,8 @@ def extract(
     Args:
         pdf_path: Path to the PDF file
         min_chars_per_page: Minimum characters to consider a page native
+        min_lines_per_page: Minimum lines to consider a page native
+        max_scanned_indicators: Maximum scanned indicators to consider a page native
         filter_noise: Whether to filter out noise lines
         detect_headings: Whether to detect heading lines
         
@@ -34,8 +38,8 @@ def extract(
     native_spans, scanned_pages = route(
         pdf_path,
         min_chars_per_page=min_chars_per_page,
-        min_lines_per_page=MIN_LINES_PER_PAGE,
-        max_scanned_indicators=MAX_SCANNED_INDICATORS,
+        min_lines_per_page=min_lines_per_page,
+        max_scanned_indicators=max_scanned_indicators,
     )
     
     spans = list(native_spans)

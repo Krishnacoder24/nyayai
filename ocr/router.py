@@ -48,6 +48,7 @@ def route(
     
     # Group spans by page
     spans_by_page: dict[int, list[LineSpan]] = {}
+    
     for span in all_spans:
         spans_by_page.setdefault(span.page_no, []).append(span)
     
