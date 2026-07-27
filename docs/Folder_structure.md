@@ -9,10 +9,8 @@ NyayAI/
 ├── .dvc/                       # DVC metadata - present but not documented anywhere else; confirm intended usage
 ├── .dvcignore
 ├── data.dvc                    # DVC-tracked pointer to data/ - see note above
-├── Makefile                    # test-ocr and cleanup-outputs targets
+├── Makefile                    # test-ocr, cleanup-outputs, download-models, ingest-corpus, generate-data, train, evaluate targets
 ├── docker-compose.yml          # qdrant only, no redis service
-├── test_deps.py                # ad hoc root-level script, not in scripts/ or tests/ - dependency-check smoke test
-├── test_gpu.py                 # ad hoc root-level script, not in scripts/ or tests/ - GPU/CUDA check
 │
 ├── config/
 │   ├── __init__.py
@@ -81,19 +79,19 @@ NyayAI/
 ├── pipeline/                      # done
 │   ├── __init__.py
 │   ├── engine.py                    # analyze(spans) -> list[ErrorSpan]; calls model.predict +
-│   │                                #   rules checkers directly (hardcoded, no registry yet)
+│   │                                #   every rule in rules/registry.py's RULES list
 │   ├── merger.py                    # combines ML + rule errors
 │   └── deduplicate.py                # removes overlapping spans by confidence
 │
-├── renderer/                      # done, but html_report.py has a live crashing bug
+├── renderer/                      # done
 │   ├── __init__.py
 │   ├── annotate_pdf.py               # draws highlight boxes on original PDF
 │   ├── colors.py                     # error_type -> highlight color
 │   ├── report.py                     # structured JSON report (build_report())
-│   └── html_report.py                # HTML report; _error_row() has an invalid f-string format
-│                                     #   spec and raises ValueError on any report with >= 1 error - P0 bug
+│   └── html_report.py                # HTML report; _error_row() crash fixed (#33)
 │
-├── train/                         # scaffolded, never executed
+├── train/                         # scaffolded; data/training/*.jsonl has been generated
+│                                  #   (scripts/generate_data.py), fine-tuning run itself tracked in issue #36
 │   ├── __init__.py
 │   ├── dataset.py                    # loads train/val/test jsonl
 │   ├── collator.py                   # DataCollatorForTokenClassification
@@ -173,8 +171,13 @@ NyayAI/
 │
 ├── scripts/
 │   ├── ingest_corpus.py               # thin wrapper: corpus/ingest.py
-│   ├── generate_data.py               # synthetic training data corruption - not yet run
-│   └── cleanup_outputs.py             # deletes uploads/outputs older than OUTPUT_RETENTION_DAYS - cron/timer-invoked, --dry-run flag
+│   ├── generate_data.py               # synthetic training data corruption - run via `make generate-data`
+│   ├── download_models.py             # pre-caches InLegalBERT + en_core_web_sm - run via `make download-models`
+│   ├── cleanup_outputs.py             # deletes uploads/outputs older than OUTPUT_RETENTION_DAYS - cron/timer-invoked, --dry-run flag
+│   ├── benchmark.py                   # OCR/inference speed + accuracy, reuses train/evaluate.py's scoring path
+│   ├── smoke_test.py                  # end-to-end pdf-in/errors-out check, no docker/celery/FastAPI needed
+│   ├── test_deps.py                   # confirms pinned dependency versions actually resolved
+│   └── test_gpu.py                    # confirms torch can see the GPU
 │
 └── docs/
     ├── architecture.md

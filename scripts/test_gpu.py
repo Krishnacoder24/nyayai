@@ -1,6 +1,6 @@
 """
 quick check that torch can see the GPU before we build anything on top of it.
-run this with: uv run python test_gpu.py
+run this with: uv run python scripts/test_gpu.py
 """
 
 import torch

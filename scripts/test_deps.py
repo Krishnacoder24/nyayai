@@ -2,7 +2,7 @@
 checks that the key packages actually resolved to the versions we pinned.
 uv can silently pick a different version if the pin in pyproject.toml
 is wrong or if a sub-dependency forces something else.
-run with: uv run python test_deps.py
+run with: uv run python scripts/test_deps.py
 """
 
 import importlib.metadata as md

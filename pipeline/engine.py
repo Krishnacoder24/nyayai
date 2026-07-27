@@ -21,19 +21,12 @@ from pipeline.deduplicate import deduplicate
 def analyze(spans: list[LineSpan]) -> list[ErrorSpan]:
     ml_errors = _run_ml(spans)
 
-    # run every registered rule checker — to add a new rule, edit rules/registry.py only.
-    # each rule's own list of ErrorSpans is kept SEPARATE here (append, not
-    # extend) - merge_spans(*span_lists) expects each argument to be one
-    # source's own list, not a pre-flattened stream of individual ErrorSpan
-    # objects. using .extend() here would flatten rule_errors into bare
-    # ErrorSpan objects, which then get unpacked as individual (non-list)
-    # arguments to merge_spans below - each one fails merger.py's own
-    # `merged.extend(spans)` line, since a single ErrorSpan isn't iterable.
+    # run every registered rule checker — to add a new rule, edit rules/registry.py only
     rule_errors = []
     for rule in RULES:
-        rule_errors.append(rule(spans))
+        rule_errors.extend(rule(spans))
 
-    merged = merge_spans(ml_errors, *rule_errors)
+    merged = merge_spans(ml_errors, rule_errors)
     deduped = deduplicate(merged)
 
     return _sort_reading_order(deduped)
