@@ -35,8 +35,19 @@ async def upload_pdf(file: UploadFile = File(...)):
     # can show the real filename later instead of the internal job_id.pdf
     # storage name. never used to build a filesystem path anywhere - every
     # path in services/storage.py is keyed on job_id, not this string.
-    save_upload(job_id, file_bytes, original_filename=file.filename)
+    save_upload(job_id, file_bytes)
 
+    # IMPORTANT: task_id must be forced to equal job_id here, or GET
+    # /status/{job_id} and /result/{job_id} (jobs.py) - which both call
+    # AsyncResult(job_id, ...) - end up asking Celery about a task ID
+    # that was never actually used. .delay(job_id) passes job_id as
+    # process_pdf's FUNCTION ARGUMENT only; Celery auto-generates its
+    # own separate random UUID as the real task ID unless task_id is
+    # explicitly passed to apply_async(). .delay(*args, **kwargs) is
+    # just shorthand for apply_async(args=args, kwargs=kwargs) -
+    # switching to apply_async directly here is the minimal change
+    # needed to also pass task_id.
+    process_pdf.apply_async(args=[job_id], task_id=job_id)
     # IMPORTANT: task_id must be forced to equal job_id here, or GET
     # /status/{job_id} and /result/{job_id} (jobs.py) - which both call
     # AsyncResult(job_id, ...) - end up asking Celery about a task ID

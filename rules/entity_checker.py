@@ -200,6 +200,7 @@ def _flag_deviations(clusters: list[list[dict]], spans: list[LineSpan]) -> list[
                 confidence=round(
                     fuzz.ratio(mention["text"].lower(), canonical.lower()) / 100, 2
                 ),
+                source="entity_rule",
             ))
 
     return errors

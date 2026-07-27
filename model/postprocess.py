@@ -160,4 +160,5 @@ def _build_span(
         page_no=source_spans[0].page_no,
         x0=x0, y0=y0, x1=x1, y1=y1,
         confidence=confidence,
+        source= "model",
     )
