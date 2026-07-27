@@ -123,6 +123,12 @@ hf_cache/
 transformers_cache/
 
 # =========================
+# Model Checkpoints
+# =========================
+model/checkpoint/
+model.checkpoint
+
+# =========================
 # Jupyter
 # =========================
 .ipynb_checkpoints/
