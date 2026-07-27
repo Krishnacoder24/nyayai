@@ -191,16 +191,19 @@ def _flag_deviations(clusters: list[list[dict]], spans: list[LineSpan]) -> list[
                 continue  # this is the canonical form, not an error
 
             span = mention["span"]
+            match_score = round(fuzz.ratio(mention["text"].lower(), canonical.lower()) / 100, 2)
             errors.append(ErrorSpan(
                 text=mention["text"],
                 error_type="entity",
                 page_no=span.page_no,
                 x0=span.x0, y0=span.y0, x1=span.x1, y1=span.y1,
                 suggestion=f'should be "{canonical}"',
-                confidence=round(
-                    fuzz.ratio(mention["text"].lower(), canonical.lower()) / 100, 2
-                ),
+                confidence=match_score,
                 source="entity_rule",
+                explanation=(
+                    f'{match_score * 100:.0f}% match to "{canonical}", '
+                    f"the more frequent mention in this document"
+                ),
             ))
 
     return errors

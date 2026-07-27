@@ -35,7 +35,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     # can show the real filename later instead of the internal job_id.pdf
     # storage name. never used to build a filesystem path anywhere - every
     # path in services/storage.py is keyed on job_id, not this string.
-    save_upload(job_id, file_bytes)
+    save_upload(job_id, file_bytes, file.filename)
 
     # IMPORTANT: task_id must be forced to equal job_id here, or GET
     # /status/{job_id} and /result/{job_id} (jobs.py) - which both call

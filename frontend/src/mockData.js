@@ -18,6 +18,7 @@ export function buildMockReport(sourceFilename) {
       suggestion: 'verify Section 302 IPC exists and is active - consider Section 103 BNS',
       confidence: 0.95,
       highlight_color: '#FF4444',
+      explanation: 'no section numbered 999 was found under IPC in the corpus',
     },
     {
       text: 'recieved',
@@ -28,6 +29,9 @@ export function buildMockReport(sourceFilename) {
       suggestion: 'received',
       confidence: 0.88,
       highlight_color: '#FFD700',
+      // spelling explanations aren't populated yet (Issue #17) - left
+      // blank on purpose to exercise ErrorPopover's placeholder text.
+      explanation: '',
     },
     {
       text: 'has been went',
@@ -38,6 +42,7 @@ export function buildMockReport(sourceFilename) {
       suggestion: 'has gone',
       confidence: 0.81,
       highlight_color: '#FF8C00',
+      explanation: '',
     },
     {
       text: 'Rakesh Kumar',
@@ -48,6 +53,7 @@ export function buildMockReport(sourceFilename) {
       suggestion: 'should be "Ramesh Kumar"',
       confidence: 0.92,
       highlight_color: '#8A2BE2',
+      explanation: '92% match to "Ramesh Kumar", the more frequent mention in this document',
     },
     {
       text: 'Patana',
@@ -58,6 +64,7 @@ export function buildMockReport(sourceFilename) {
       suggestion: 'should be "Patna"',
       confidence: 0.9,
       highlight_color: '#8A2BE2',
+      explanation: '90% match to "Patna", the more frequent mention in this document',
     },
   ]
 

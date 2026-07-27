@@ -33,7 +33,7 @@ def render_html(report: dict, output_path: Path) -> None:
   <p class="summary">{_summary_line(report)}</p>
   <table>
     <thead>
-      <tr><th>Type</th><th>Page</th><th>Text</th><th>Suggestion</th><th>Confidence</th></tr>
+      <tr><th>Type</th><th>Page</th><th>Text</th><th>Suggestion</th><th>Confidence</th><th>Source</th></tr>
     </thead>
     <tbody>
       {rows}

@@ -116,7 +116,7 @@ def _check_span(span: LineSpan, client: QdrantClient) -> list[ErrorSpan]:
             # for u/s pattern, act comes from the match itself
             resolved_act = _canonical_act(act if act else match.group(2))
 
-            is_valid = _lookup_section(client, section_no, resolved_act)
+            is_valid, explanation = _lookup_section(client, section_no, resolved_act)
 
             if not is_valid:
                 errors.append(ErrorSpan(
@@ -127,17 +127,22 @@ def _check_span(span: LineSpan, client: QdrantClient) -> list[ErrorSpan]:
                     suggestion=f"verify Section {section_no} {resolved_act} exists and is active",
                     confidence=0.95,  # regex match is deterministic, high confidence
                     source="citation_rule",
+                    explanation=explanation,
                 ))
 
     return errors
 
 
-def _lookup_section(client: QdrantClient, section_no: str, act: str) -> bool:
+def _lookup_section(client: QdrantClient, section_no: str, act: str) -> tuple[bool, str]:
     """
-    returns True if the citation should be treated as valid, False if it
-    should be flagged as an error.
+    returns (is_valid, explanation). is_valid=True means the citation should
+    be treated as valid (explanation is "" in that case - nothing to show,
+    since no ErrorSpan gets created for a valid citation). is_valid=False
+    means it should be flagged as an error, and explanation is a plain-
+    English sentence for why, built only from fields the corpus actually
+    returned - never a guess dressed up as a fact.
 
-    two different signals decide this, and they're not the same thing:
+    two different signals decide validity, and they're not the same thing:
 
     - payload["title"] starting with "[Omitted"/"[Repealed" means THIS
       SPECIFIC SECTION never existed / was individually dropped before
@@ -170,22 +175,44 @@ def _lookup_section(client: QdrantClient, section_no: str, act: str) -> bool:
                     payload = lookup_section(alt, act, client=client)
 
         if payload is None:
-            return False
+            return False, f"no section numbered {section_no} was found under {act} in the corpus"
 
-        title = (payload.get("title") or "").strip().lower()
-        if title.startswith(("[omitted", "[repealed")):
-            return False
+        title = (payload.get("title") or "").strip()
+        if title.lower().startswith(("[omitted", "[repealed")):
+            explanation = f'Section {section_no} {act} is recorded in the corpus as "{title}"'
+            return False, explanation
 
         if act.strip().lower() not in SUPERSEDED_ACTS and payload.get("status") == "repealed":
-            return False
+            return False, _repeal_explanation(section_no, act, payload)
 
-        return True
+        return True, ""
 
     except Exception as e:
         logger.warning(f"qdrant query failed for Section {section_no} {act}: {e}")
         # if the query fails, don't flag it - false negatives are safer
         # than false positives for legal documents
-        return True
+        return True, ""
+
+
+def _repeal_explanation(section_no: str, act: str, payload: dict) -> str:
+    """
+    builds the explanation for a section whose own status="repealed" is a
+    real per-section signal (BNS/BNSS/CPC/Constitution - see _lookup_section's
+    docstring for why IPC/CrPC never reach here). pulls effective_date and
+    replaced_by straight out of metadata rather than inventing either -
+    both are optional per-parser fields, so the sentence only claims what's
+    actually there.
+    """
+    metadata = payload.get("metadata") or {}
+    effective_date = metadata.get("effective_date")
+    replaced_by = metadata.get("replaced_by")
+
+    explanation = f"Section {section_no} {act} was repealed"
+    if effective_date:
+        explanation += f" effective {effective_date}"
+    if replaced_by:
+        explanation += f"; replaced by Section {replaced_by}"
+    return explanation
 
 
 def _toggle_hyphen(number: str) -> str:

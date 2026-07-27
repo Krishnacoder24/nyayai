@@ -36,6 +36,10 @@ class ErrorSpan:
     suggestion: str = ""      # suggested correction, empty until we have a correction model
     confidence: float = 0.0   # model confidence score for this span
     source: str = ""           # source of the error span
+    explanation: str = ""     # why this was flagged, for the frontend's hover popover -
+                               # empty until a checker fills it in (see rules/citation_checker.py,
+                               # rules/entity_checker.py). spelling/grammar leave this blank
+                               # until Issue #17 gives those checkers something real to say.
 
     @property
     def bbox(self):
