@@ -108,6 +108,7 @@ def check_cross_references(spans: list[LineSpan]) -> list[ErrorSpan]:
                 y1=ref["span"].y1,
                 suggestion=f'"{ref["target"]}" is referenced but never defined in this document',
                 confidence=0.90,
+                source="cross_reference_rule",
             ))
 
     return errors

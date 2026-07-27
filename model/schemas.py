@@ -35,6 +35,7 @@ class ErrorSpan:
     y1: float
     suggestion: str = ""      # suggested correction, empty until we have a correction model
     confidence: float = 0.0   # model confidence score for this span
+    source: str = ""           # source of the error span
 
     @property
     def bbox(self):

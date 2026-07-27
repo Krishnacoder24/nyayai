@@ -126,6 +126,7 @@ def _check_span(span: LineSpan, client: QdrantClient) -> list[ErrorSpan]:
                     x0=span.x0, y0=span.y0, x1=span.x1, y1=span.y1,
                     suggestion=f"verify Section {section_no} {resolved_act} exists and is active",
                     confidence=0.95,  # regex match is deterministic, high confidence
+                    source="citation_rule",
                 ))
 
     return errors
