@@ -3,10 +3,9 @@
 **status:** the inference scaffold described below (preprocess → predict →
 postprocess) is fully built and matches the real code in `model/`. The
 fine-tuning section further down describes the *planned* training
-configuration — `train/` is scaffolded but has not actually been run yet,
-so there is no fine-tuned checkpoint, no real F1 numbers, and
-`model/predict.py` currently returns all-`O` labels (no detected errors)
-for every document. Citation and entity checking are unaffected by this —
+configuration — `train/` is scaffolded and ran,
+so there is fine-tuned checkpoint, real F1 numbers.
+Citation and entity checking are unaffected by this —
 they're pure rule-based checkers in `rules/`, not part of this ML path.
 
 ## overview

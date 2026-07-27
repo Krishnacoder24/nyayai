@@ -299,19 +299,29 @@ See `docs/architecture.md` for the full frozen folder structure.
 - [surya OCR](https://github.com/VikParuchuri/surya)
 - [IndiaCode](https://indiacode.nic.in) - source for IPC, BNS, BNSS, Constitution, CPC PDFs
 
-<!-- After every new training run
-  # Train model
+---
 
+## data & model versioning (DVC)
+
+`data/` and `model/checkpoint/` are gitignored and tracked with DVC instead
+(`data.dvc`, `model/checkpoint.dvc`) - both are too large/binary to live
+directly in git. The configured remote (`.dvc/config`) is a local
+filesystem path, not a shared/cloud remote, so `dvc pull` on a different
+machine needs the remote pointed at wherever you actually keep the DVC
+storage first (`dvc remote modify local url <path>`).
+
+**On a fresh clone:**
+```bash
+git clone <repo>
+uv sync
+dvc pull
+```
+
+**After a new training run** (`make train` writes to `model/checkpoint/`):
+```bash
 dvc add model/checkpoint
 git add model/checkpoint.dvc
 git commit -m "Update model checkpoint"
 dvc push
 git push
-
- -->
-
- <!-- on anohter machine
- git clone <repo>
- uv sync
- dvc pull 
- -->
+```

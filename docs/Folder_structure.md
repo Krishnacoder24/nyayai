@@ -6,9 +6,9 @@ NyayAI/
 ├── .env                        # gitignored, not committed
 ├── .env.example
 ├── .gitignore
-├── .dvc/                       # DVC metadata - present but not documented anywhere else; confirm intended usage
+├── .dvc/                       # DVC metadata - local remote configured, see README's "data & model versioning" section
 ├── .dvcignore
-├── data.dvc                    # DVC-tracked pointer to data/ - see note above
+├── data.dvc                    # DVC-tracked pointer to data/
 ├── Makefile                    # test-ocr, cleanup-outputs, download-models, ingest-corpus, generate-data, train, evaluate targets
 ├── docker-compose.yml          # qdrant only, no redis service
 │
@@ -30,21 +30,22 @@ NyayAI/
 │   ├── __init__.py
 │   ├── schemas.py                # ErrorSpan + LABELS/LABEL2ID/ID2LABEL
 │   ├── preprocess.py             # LineSpans -> Chunks
-│   ├── predict.py                # InLegalBERT inference; reloads model+tokenizer every call, no caching yet
+│   ├── predict.py                # InLegalBERT inference; model+tokenizer cached after first call (#35)
 │   ├── postprocess.py            # BIO labels -> ErrorSpans
-│   ├── pipeline.py               # DEAD CODE - full duplicate of pipeline/engine.py + merger.py +
-│   │                              #   deduplicate.py, predates the pipeline/ package, nothing imports it
-│   └── checkpoint/                # empty - fine-tuned weights not yet produced (gitignored once present)
+│   ├── .gitignore                 # /checkpoint - actual weights tracked via DVC instead, see checkpoint.dvc
+│   ├── checkpoint.dvc             # DVC pointer for model/checkpoint/ - see README's "data & model versioning"
+│   └── checkpoint/                # gitignored, populated by `dvc pull` or `make train`
 │
-├── rules/                        # citation + entity done; several planned checkers are 0-byte placeholders
+├── rules/                        # citation, entity, and cross-reference checkers done, registered in registry.py
 │   ├── __init__.py
 │   ├── citation_checker.py        # done - regex + qdrant exact lookup via corpus.search
 │   ├── entity_checker.py          # done - NER + rapidfuzz consistency
-│   └── cross_reference_checker.py # 0-byte placeholder - exhibit/annexure reference checking (planned)
+│   ├── cross_reference_checker.py # done - exhibit/annexure reference checking
+│   └── registry.py                # RULES list - add a new checker here only, engine.py never changes
 │   (date_checker.py, formatting_checker.py, abbreviation_checker.py, consistency_checker.py
 │    are planned future checkers with no file yet - not stubbed, just not started)
 │
-├── corpus/                        # infra done; IPC parser rewritten (issue #25), BNS/BNSS/CPC/Constitution not yet started
+├── corpus/                        # infra done; all six Act parsers built (IPC, BNS, BNSS, CPC, CRPC, Constitution)
 │   ├── __init__.py
 │   ├── ingest.py                  # top level: parse -> chunk -> embed -> upload
 │   │                              #   NOTE: has a stray unused `from surya import settings` import,
@@ -190,7 +191,5 @@ NyayAI/
 ---
 
 ## notes on this listing vs. the repo
-- DVC (`.dvc/`, `.dvcignore`, `data.dvc`) is present but not documented
-  anywhere else in the repo (README, other docs) — worth either
-  documenting what it tracks and how to use it, or removing it if it's
-  not actually in active use.
+- none currently — DVC is documented in README.md's "data & model
+  versioning" section and in active use with a configured local remote.
