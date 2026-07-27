@@ -21,7 +21,7 @@ download-models:
 	uv run python scripts/download_models.py $(ARGS)
 
 ingest-corpus:
-	uv run python scripts/ingest_corpus.py $(ARGS)
+	uv run python scripts/ingest_corpus.py --all
 
 generate-data:
 	uv run python scripts/generate_data.py --corpus corpus/sources/ --out data/training $(ARGS)
