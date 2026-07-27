@@ -71,12 +71,13 @@ def _error_row(error: dict) -> str:
         f'<td>{_escape(error["text"])}</td>'
         f'<td>{_escape(error.get("suggestion") or "—")}</td>'
         f'<td>{conf_str}</td>'
+        f'<td>{_escape(error.get("source") or "—")}</td>'
         "</tr>"
     )
 
 
 def _empty_row() -> str:
-    return '<tr><td colspan="5">No errors found.</td></tr>'
+    return '<tr><td colspan="6">No errors found.</td></tr>'
 
 
 def _escape(text: str) -> str:
