@@ -137,12 +137,20 @@ already handles Hindi script.
 ```
 rules/date_checker.py          date formats, logical consistency (date of
                                incident before date of FIR, etc.)
-rules/cross_reference_checker.py   "as mentioned in paragraph 3" where
-                               paragraph 3 doesn't exist (0-byte
-                               placeholder exists already, see M2)
 rules/formatting_checker.py    section numbering, header hierarchy
 rules/signature_checker.py     signature/stamp fields missing
 ```
+(`rules/cross_reference_checker.py` is already implemented and registered
+— see `rules/registry.py`.)
+
+**pipeline scaling ideas** (folded in from `reviews/*.md` per issue #48 —
+low-priority, only useful once the system is stable):
+- run the ML checker and rule-based checkers concurrently in
+  `pipeline/engine.py` instead of sequentially — they're independent today,
+  nothing structurally blocks it.
+- move reading-order sorting (`_sort_reading_order` in `pipeline/engine.py`)
+  into the renderer layer, since it's presentation-related rather than
+  analysis-related. very low priority.
 
 **document type detection:**
 auto-detect document type (FIR, bail application, charge sheet, contract)
@@ -177,7 +185,7 @@ highlight what changed, not just what's wrong.
 main
  └─ feature/ocr        merged — OCR pipeline complete
  └─ feature/model       merged — model scaffold complete
- └─ feature/corpus      merged — infra complete, IPC parser only (naive version)
+ └─ feature/corpus      merged — all six Act parsers built (IPC, BNS, BNSS, CPC, CRPC, Constitution)
  └─ feature/renderer    merged
  └─ feature/api         merged
  └─ feature/frontend    merged — wired to the real API

@@ -343,25 +343,41 @@ only surya OCR and InLegalBERT inference touch the GPU.
 - `model/pipeline.py` is dead code, a duplicate of `pipeline/engine.py`.
 
 **not yet built:**
-- BNS, BNSS, CPC, and Constitution parsers (`corpus/parsers/*.py` are
-  0-byte files) — citation checking currently only recognizes IPC, and
-  even the IPC parser is the old naive version, not the TOC-guided rewrite.
-- fine-tuned model weights — `model/checkpoint/` is empty, so ML error
-  detection (spelling/grammar/citation-via-model) returns nothing today.
-  Citation and entity checking work independently of this, since they're
-  pure rule-based checkers.
-- model/tokenizer caching — every job reloads InLegalBERT from scratch.
-- a pluggable rule-checker registry — adding a new checker currently means
-  editing `pipeline/engine.py` directly.
-- `ErrorSpan` provenance (`source`) and rich-tooltip `explanation` fields.
+- fine-tuned model weights — `model/checkpoint/` doesn't have real weights
+  yet, so ML error detection (spelling/grammar/citation-via-model) returns
+  nothing today. Citation and entity checking work independently of this,
+  since they're pure rule-based checkers. (tracked: issue #36)
+- `ErrorSpan` provenance (`source`) and rich-tooltip `explanation` fields
+  (tracked: issues #38, #40)
 - entity checker uses `en_core_web_sm`, which handles Indian names poorly
   — a fine-tuned Indian legal NER model would improve this.
 - no correction suggestions — `ErrorSpan.suggestion` is empty for
   ML-detected errors; only citation errors get a suggestion (from the
-  corpus's `replaced_by` metadata).
+  corpus's `replaced_by` metadata). (tracked: issue #41)
 - no authentication on the API — fine for local use, must be added before
   any deployment.
 - no real automated test suite yet — most test files are stubs.
+  (tracked: issue #50)
+
+**architectural refinements, not blockers** (folded in from `reviews/*.md`
+per issue #48 — these were real recommendations from an earlier
+architecture review, kept here now that the review docs themselves have
+been retired):
+- ML inference (`build_chunks` → `predict` → `build_error_spans`) is
+  called directly from `pipeline/engine.py`'s `_run_ml()` rather than
+  behind a single `model.analyze(spans)` entry point. Fine while it's
+  three function calls; if inference grows more complex (multiple
+  checkpoints, batching strategy, ONNX), moving it behind one interface
+  would keep `engine.py` implementation-agnostic.
+- Chunking structural markers (`Explanation`/`Illustration`/`Exception`)
+  are hardcoded in `corpus/chunker.py` rather than defined per-parser.
+  Fine while every Act shares this structure; would need to move into
+  parser-specific configuration if an Act's structure diverges.
+- Most magnitude/similarity thresholds already live in
+  `config/constants.py`, but `pipeline/deduplicate.py`'s
+  `OVERLAP_THRESHOLD` and `rules/entity_checker.py`'s
+  `SIMILARITY_THRESHOLD` are still defined locally — minor inconsistency,
+  not a functional issue.
 
 The authoritative, up-to-date list of everything above (with GitHub issue
 numbers, milestones, and priority) lives in the repo's issue tracker, not
