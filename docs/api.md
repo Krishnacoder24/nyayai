@@ -292,13 +292,25 @@ backend (see `config/settings.py` / `workers/celery_app.py`). There is no
 uv run uvicorn api.main:app --reload
 ```
 
-**start a Celery worker — the `-Q pdf_processing` flag is mandatory:**
+**start a Celery worker — the `-Q pdf_processing` flag is mandatory, and so is `--pool=solo`:**
 ```bash
-uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing
+uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing --pool=solo
 ```
 A Celery worker only consumes queues it's explicitly told to listen on.
 Omitting `-Q pdf_processing` means uploaded PDFs get enqueued but never
 picked up — no error, no crash, the job just sits in `PENDING` forever.
+
+`--pool=solo` matters just as much on a GPU-backed single machine: the
+default `prefork` pool spawns one child process per CPU core, and each
+child loads its own copy of InLegalBERT + Surya onto the GPU the moment
+it handles its first task. The module-level model caches in
+`model/predict.py` and `ocr/surya_extractor.py` only prevent reloading
+*within* a process — they do nothing to stop several forked processes
+from each holding a full set of models in VRAM simultaneously. On a 6GB
+card that's enough on its own to cause `CUDA out of memory`, regardless
+of how large any individual document is. `--pool=solo` keeps everything
+in one process handling one task at a time, which is the correct shape
+for this deployment target.
 
 All three (Qdrant, API, worker) need to be running for the full pipeline
 to work end to end.

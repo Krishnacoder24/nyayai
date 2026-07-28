@@ -13,8 +13,10 @@ Improvements:
 - Batch processing with memory optimization
 """
 
+import logging
 import pypdfium2 as pdfium
 import re
+import torch
 from PIL import Image
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
@@ -23,6 +25,41 @@ from surya.detection import DetectionPredictor
 from surya.recognition import RecognitionPredictor
 
 from ocr.tokens import LineSpan
+
+logger = logging.getLogger(__name__)
+
+
+# module-level cache so surya's detection + recognition weights only get
+# loaded onto the GPU once per process, not once per document.
+#
+# before this fix: ocr/pipeline.py did `surya = SuryaExtractor()` fresh for
+# every document that had at least one scanned page, and __init__ used to
+# build brand new DetectionPredictor()/RecognitionPredictor() instances
+# every single call. those constructors push real model weights onto CUDA.
+# the old instance only gets freed once python's GC actually collects it -
+# refcounting usually handles that fast, but a Celery worker can pick up
+# the next scanned document before the previous predictor object is fully
+# torn down, and torch's caching allocator doesn't always hand freed VRAM
+# back cleanly under that kind of back-to-back churn. over a worker's
+# lifetime (many documents, some with scanned pages) this is exactly the
+# kind of thing that manifests as "works for the first few PDFs, OOMs
+# later" rather than an immediate crash.
+#
+# model/predict.py already solved this exact problem for InLegalBERT with
+# a module-level cache - this mirrors that pattern for surya.
+_CACHED_DETECTION_PREDICTOR: Optional[DetectionPredictor] = None
+_CACHED_RECOGNITION_PREDICTOR: Optional[RecognitionPredictor] = None
+
+
+def _get_shared_predictors() -> Tuple[DetectionPredictor, RecognitionPredictor]:
+    global _CACHED_DETECTION_PREDICTOR, _CACHED_RECOGNITION_PREDICTOR
+
+    if _CACHED_DETECTION_PREDICTOR is None:
+        logger.info("loading surya detection + recognition models (first use this process)")
+        _CACHED_DETECTION_PREDICTOR = DetectionPredictor()
+        _CACHED_RECOGNITION_PREDICTOR = RecognitionPredictor()
+
+    return _CACHED_DETECTION_PREDICTOR, _CACHED_RECOGNITION_PREDICTOR
 
 
 class SuryaExtractor:
@@ -63,12 +100,22 @@ class SuryaExtractor:
         self.min_confidence = min_confidence
         self.detect_layout = detect_layout
         
-        # Load models once, reuse across all pages
-        # Don't reinstantiate per page
-        self.detection_predictor = DetectionPredictor()
-        self.recognition_predictor = RecognitionPredictor()
+        # Reuse the process-wide detection/recognition models instead of
+        # loading fresh weights onto the GPU every time a SuryaExtractor is
+        # constructed (one per document, see ocr/pipeline.py) - see
+        # _get_shared_predictors() above for why this matters for VRAM.
+        self.detection_predictor, self.recognition_predictor = _get_shared_predictors()
         
-        # Cache for rendered pages to avoid re-rendering
+        # Cache for rendered pages of *this* extraction only, to avoid
+        # re-rendering a page if it's requested twice within the same
+        # extract() call. Deliberately instance-scoped (not module-level
+        # like the predictors above) and keyed only by page_no - a
+        # module-level cache would return page 3 of a previous, unrelated
+        # document when the current document also has a page 3. A fresh
+        # SuryaExtractor per document keeps that from happening, and
+        # clear_cache() (called automatically at the end of extract())
+        # drops the PIL images as soon as this document is done with them
+        # instead of waiting on __del__/GC.
         self._image_cache: Dict[int, Image.Image] = {}
     
     def _render_pages(
@@ -306,6 +353,18 @@ class SuryaExtractor:
                     
                     if span.is_valid():
                         all_spans.append(span)
+        
+        # This document is done - drop the rendered PIL images now rather
+        # than waiting for this SuryaExtractor instance to be garbage
+        # collected (ocr/pipeline.py doesn't use the `with` form, so
+        # __exit__/clear_cache() would otherwise never run). Also ask torch
+        # to hand back any now-unused cached CUDA blocks - image batch
+        # sizes vary per document, so freeing here reduces fragmentation
+        # on the 6GB card instead of letting the allocator hold onto the
+        # largest batch it ever saw.
+        self.clear_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         
         return all_spans
     

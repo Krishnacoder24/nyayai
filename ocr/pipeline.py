@@ -47,8 +47,11 @@ def extract(
     if scanned_pages:
         # Lazy import so Surya models only load when actually needed
         from ocr.surya_extractor import SuryaExtractor
-        surya = SuryaExtractor()
-        spans.extend(surya.extract(pdf_path, scanned_pages))
+        # `with` guarantees clear_cache() runs even if extract() raises -
+        # SuryaExtractor defines __enter__/__exit__ for exactly this, it
+        # just wasn't being used here before.
+        with SuryaExtractor() as surya:
+            spans.extend(surya.extract(pdf_path, scanned_pages))
     
     # Filter noise
     if filter_noise:
