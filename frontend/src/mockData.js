@@ -12,7 +12,7 @@ export function buildMockReport(sourceFilename) {
     {
       text: 'Section 302 IPC',
       error_type: 'citation',
-      page_no: 1,
+      page_no: 0,
       x0: 120, y0: 180, x1: 260, y1: 198,
       bbox: [120, 180, 260, 198],
       suggestion: 'verify Section 302 IPC exists and is active - consider Section 103 BNS',
@@ -23,7 +23,7 @@ export function buildMockReport(sourceFilename) {
     {
       text: 'recieved',
       error_type: 'spelling',
-      page_no: 1,
+      page_no: 0,
       x0: 90, y0: 260, x1: 160, y1: 278,
       bbox: [90, 260, 160, 278],
       suggestion: 'received',
@@ -36,7 +36,7 @@ export function buildMockReport(sourceFilename) {
     {
       text: 'has been went',
       error_type: 'grammar',
-      page_no: 1,
+      page_no: 0,
       x0: 200, y0: 340, x1: 320, y1: 358,
       bbox: [200, 340, 320, 358],
       suggestion: 'has gone',
@@ -47,7 +47,7 @@ export function buildMockReport(sourceFilename) {
     {
       text: 'Rakesh Kumar',
       error_type: 'entity',
-      page_no: 1,
+      page_no: 0,
       x0: 130, y0: 480, x1: 260, y1: 498,
       bbox: [130, 480, 260, 498],
       suggestion: 'should be "Ramesh Kumar"',
@@ -58,7 +58,7 @@ export function buildMockReport(sourceFilename) {
     {
       text: 'Patana',
       error_type: 'entity',
-      page_no: 2,
+      page_no: 1,
       x0: 150, y0: 220, x1: 220, y1: 238,
       bbox: [150, 220, 220, 238],
       suggestion: 'should be "Patna"',

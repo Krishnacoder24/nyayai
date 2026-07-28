@@ -31,7 +31,7 @@ export default function ErrorList({ report, activeErrorIndex, onSelect }) {
               <span className="error-list-item-body">
                 <span className="error-list-item-text">{error.text}</span>
                 <span className="error-list-item-meta">
-                  p.{error.page_no} · {TYPE_LABELS[error.error_type] || error.error_type}
+                  p.{error.page_no + 1} · {TYPE_LABELS[error.error_type] || error.error_type}
                 </span>
                 {error.suggestion && <span className="error-list-item-suggestion">{error.suggestion}</span>}
               </span>
