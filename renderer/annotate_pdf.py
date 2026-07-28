@@ -38,6 +38,13 @@ def annotate(pdf_path: Path, errors: list[ErrorSpan], output_path: Path) -> int:
     undercount if noise-filtering strips every span on a page), so callers
     that need total_pages (see services/analysis.py -> build_report) get
     it from here instead of opening the PDF a second time.
+
+    ErrorSpan.page_no is 0-indexed (ocr/native_extractor.py and
+    ocr/surya_extractor.py both build it via plain enumerate(pages) /
+    pymupdf's doc[i], neither passes start=1), so the loop below has to
+    be 0-indexed too - looping with enumerate(..., start=1) here used to
+    mean every page's highlight boxes got drawn one page later than
+    where the actual error is.
     """
     reader = PdfReader(str(pdf_path))
     writer = PdfWriter()
@@ -45,7 +52,7 @@ def annotate(pdf_path: Path, errors: list[ErrorSpan], output_path: Path) -> int:
     errors_by_page = _group_by_page(errors)
     total_pages = len(reader.pages)
 
-    for page_no, page in enumerate(reader.pages, start=1):
+    for page_no, page in enumerate(reader.pages):
         page_errors = errors_by_page.get(page_no, [])
         if page_errors:
             width = float(page.mediabox.width)

@@ -118,6 +118,11 @@
   margin: 0.15rem 0 0;
 }
 
+.viewer-header-controls {
+  display: flex;
+  align-items: center;
+}
+
 .viewer-page-nav {
   display: flex;
   align-items: center;
@@ -144,6 +149,37 @@
   color: var(--ink-muted);
   min-width: 4.5rem;
   text-align: center;
+}
+
+.viewer-zoom-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--hairline);
+}
+
+.viewer-zoom-nav button {
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.viewer-zoom-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.viewer-zoom-reset {
+  min-width: 3.6rem;
+  color: var(--ink-muted);
 }
 
 .viewer-body {

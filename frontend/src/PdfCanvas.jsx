@@ -4,11 +4,20 @@ import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 
-// render at a fixed internal scale for crispness, independent of CSS display size
-const RENDER_SCALE = 1.5
+// raster resolution is capped as a multiple of the CSS display scale, not
+// the PDF's own point size - without this, zooming in with the buttons
+// below would render at 1x-ish internal resolution and just look blurry
+// once CSS stretched it up. capped at 4 so a large zoom on a big page
+// doesn't blow past a sane canvas memory budget.
+const MAX_RASTER_SCALE = 4
 
 /*
-  renders `pageNumber` of `file` onto a canvas.
+  renders `pageNumber` of `file` onto a canvas, sized to fill `containerWidth`
+  (times `zoom`) rather than a fixed 1-CSS-pixel-per-PDF-point size - a
+  Letter/A4 page at 1:1 renders as a small rectangle lost in a mostly-empty
+  viewer on any normal-sized monitor. containerWidth comes from App.jsx's
+  ResizeObserver on the canvas area; zoom is the user-controlled multiplier
+  on top of that fit-to-width baseline (1.0 = fit exactly).
 
   reports back { widthPts, heightPts, displayScale, numPages } via
   onPageRendered so HighlightOverlay/MarginRail can convert ErrorSpan
@@ -26,7 +35,7 @@ const RENDER_SCALE = 1.5
   was inside the same effect keyed on `[file, pageNumber]`) - splitting it
   out means turning pages only ever calls the cheap `doc.getPage(...)`.
 */
-export default function PdfCanvas({ file, pageNumber, onPageRendered }) {
+export default function PdfCanvas({ file, pageNumber, containerWidth, zoom, onPageRendered }) {
   const canvasRef = useRef(null)
   const [error, setError] = useState(null)
   const [doc, setDoc] = useState(null)
@@ -75,14 +84,25 @@ export default function PdfCanvas({ file, pageNumber, onPageRendered }) {
         if (cancelled) return
 
         const viewportAtScale1 = page.getViewport({ scale: 1 })
-        const viewport = page.getViewport({ scale: RENDER_SCALE })
+
+        // fitScale fills containerWidth exactly at zoom=1; falls back to
+        // 1:1 point-to-CSS-pixel sizing if containerWidth isn't known yet
+        // (first paint, before the ResizeObserver in App.jsx has measured
+        // anything) rather than flashing a 0-width canvas.
+        const fitScale = containerWidth
+          ? containerWidth / viewportAtScale1.width
+          : 1
+        const displayScale = fitScale * (zoom || 1)
+
+        const rasterScale = Math.min(displayScale, MAX_RASTER_SCALE)
+        const viewport = page.getViewport({ scale: rasterScale })
 
         const canvas = canvasRef.current
         const ctx = canvas.getContext('2d')
         canvas.width = viewport.width
         canvas.height = viewport.height
-        canvas.style.width = `${viewport.width / RENDER_SCALE}px`
-        canvas.style.height = `${viewport.height / RENDER_SCALE}px`
+        canvas.style.width = `${viewportAtScale1.width * displayScale}px`
+        canvas.style.height = `${viewportAtScale1.height * displayScale}px`
 
         renderTask = page.render({ canvasContext: ctx, viewport })
         await renderTask.promise
@@ -91,15 +111,10 @@ export default function PdfCanvas({ file, pageNumber, onPageRendered }) {
         onPageRendered?.({
           widthPts: viewportAtScale1.width,
           heightPts: viewportAtScale1.height,
-          // CSS-displayed width divided by point width = what HighlightOverlay
-          // and MarginRail multiply raw bbox coordinates by. this always
-          // equals exactly 1.0 today, because canvas.style.width above is
-          // set to viewportAtScale1.width (no zoom control exists yet) - it's
-          // written as a division rather than hardcoded so that when a zoom
-          // feature sets canvas.style.width to viewportAtScale1.width * zoom
-          // instead, this keeps computing the right value with no changes
-          // needed in HighlightOverlay or MarginRail.
-          displayScale: viewport.width / RENDER_SCALE / viewportAtScale1.width,
+          // CSS-displayed width divided by point width - what HighlightOverlay
+          // and MarginRail multiply raw bbox coordinates by to land on the
+          // right on-screen pixel regardless of fit-to-width sizing or zoom.
+          displayScale,
           numPages: doc.numPages,
         })
       } catch (err) {
@@ -112,7 +127,7 @@ export default function PdfCanvas({ file, pageNumber, onPageRendered }) {
       cancelled = true
       renderTask?.cancel()
     }
-  }, [doc, pageNumber, onPageRendered])
+  }, [doc, pageNumber, containerWidth, zoom, onPageRendered])
 
   if (error) {
     return <div className="pdf-canvas-error">Couldn't render this page: {error}</div>
