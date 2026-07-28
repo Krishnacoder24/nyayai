@@ -48,6 +48,7 @@ dependencies = [
     # ------------------------
     "rapidfuzz>=3.14.5",
     "spacy>=3.8.14",
+    "pyspellchecker>=0.8.1",
     "pypdf",
     "reportlab",
     "pytest",
