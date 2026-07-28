@@ -139,11 +139,24 @@ uv run uvicorn api.main:app --reload
 
 **a worker** (needed for anything to actually get processed):
 ```bash
-uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing
+uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing --pool=solo
 ```
 the `-Q pdf_processing` isn't optional - a worker only consumes queues it's
 explicitly told to listen on. leaving it off means uploads just sit there
 forever with no error at all (found this out the hard way).
+
+`--pool=solo` isn't optional either, for a different reason: without it,
+Celery defaults to the `prefork` pool and forks one child process per CPU
+core. Each of those child processes independently imports `model.predict`
+and `ocr.surya_extractor` and loads its *own* copy of InLegalBERT and
+Surya's detection/recognition models onto the GPU the first time it picks
+up a task - the module-level caches in those files only dedupe loads
+*within* a process, not across forked siblings. On a 6GB card, two or
+three prefork children processing documents at the same time is enough
+to blow the VRAM budget on its own, independent of any single document's
+size. `--pool=solo` runs everything in one process, one task at a time,
+which matches this project's single-GPU, single-machine deployment
+target anyway.
 
 **frontend:**
 ```bash

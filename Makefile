@@ -4,6 +4,7 @@ export PYTHONPATH := $(CURDIR)
 
 .PHONY: \
 	test-ocr \
+	worker \
 	cleanup-outputs \
 	download-models \
 	ingest-corpus \
@@ -13,6 +14,9 @@ export PYTHONPATH := $(CURDIR)
 
 test-ocr:
 	uv run python tests/test_ocr.py $(FILE)
+
+worker:
+	uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing --pool=solo
 
 cleanup-outputs:
 	uv run python scripts/cleanup_outputs.py $(ARGS)
