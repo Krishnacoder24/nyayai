@@ -10,6 +10,13 @@ plus a structured report.
 law firms, and legal aid organisations where document confidentiality and
 per-document cost both matter.
 
+**The full pipeline works end to end now**: upload a PDF in the real frontend
+→ it hits the real FastAPI backend → Celery runs OCR → rules (citation +
+entity + spelling + cross-reference) → merge/dedupe/sort → renders an
+annotated PDF and a report → the frontend polls and displays the real result,
+not mock data. The one piece still missing is the fine-tuned model - see
+"Status" below, it's not blocking the rest of this from being real.
+
 ---
 
 ## Status
@@ -17,14 +24,16 @@ per-document cost both matter.
 | Component | Status |
 |---|---|
 | OCR (`ocr/`) | ✅ done |
-| Model scaffold (`model/`) | ✅ done — no fine-tuned weights yet, returns all-`O` labels |
-| Corpus (`corpus/`) | ✅ done - all parsers updated to use their specific pdf structure |
-| Rules (`rules/`) | ✅ done — see known limitations below |
+| Model scaffold (`model/`) | ✅ wiring done — **no fine-tuned checkpoint yet**, so ML-based detection currently returns nothing (intentional graceful degradation, not a bug) |
+| Corpus (`corpus/`) | ✅ done — all six act parsers (IPC, BNS, BNSS, CPC, CrPC, Constitution) parse the real PDFs; verified IPC→BNS and CrPC→BNSS mapping tables in `corpus/data/` |
+| Rules (`rules/`) | ✅ done — citation, entity, spelling, cross-reference checkers, pluggable registry — see known limitations below |
 | Pipeline (`pipeline/`) | ✅ done |
-| Renderer (`renderer/`) | ✅ done |
-| API + workers (`api/`, `workers/`, `services/`) | ✅ done |
-| Frontend (`frontend/`) | 🟡 broken |
-| Fine-tuning (`train/`) | ⬜ not started |
+| Renderer (`renderer/`) | ✅ done — the crashing HTML-report bug is fixed |
+| API + workers (`api/`, `workers/`, `services/`) | ✅ done — no auth yet |
+| Frontend (`frontend/`) | ✅ done — wired to the real API, not mock data |
+| Tests (`tests/`) | ✅ done — real automated suite, see "running the test suite" below |
+| Fine-tuning (`train/`) | 🟡 scaffolded (training loop, dataset, metrics, evaluation all written) — **never actually run**, `model/checkpoint/` is still empty |
+| Deployment | ⬜ not started |
 
 
 the model handles spelling/grammar/citation-shape; the two rule-based checkers
@@ -54,12 +63,17 @@ NyayAI/
 │   └── postprocess.py    BIO labels -> ErrorSpans with real bboxes
 │
 ├── rules/                done
-│   ├── citation_checker.py   regex + corpus.search lookup
-│   └── entity_checker.py     spacy NER + rapidfuzz clustering
+│   ├── citation_checker.py       regex + corpus.search lookup
+│   ├── entity_checker.py         spacy NER + rapidfuzz clustering
+│   ├── spelling_checker.py       rule-based legal-vocabulary spell checker
+│   ├── cross_reference_checker.py   flags dangling "see paragraph N" references
+│   └── registry.py               pluggable list all four checkers are run through
 │
 ├── corpus/                done
 │   ├── schemas.py, chunker.py, embeddings.py, uploader.py, search.py
-│   └── parsers/          
+│   ├── parser.py          dispatches to the right act-specific parser
+│   ├── parsers/           one file per act - IPC, BNS, BNSS, CPC, CrPC, Constitution
+│   └── data/              verified IPC→BNS / CrPC→BNSS mapping tables + schedules
 │
 ├── pipeline/             done - merge -> deduplicate -> reading-order sort
 ├── renderer/              done - annotated PDF, colors, JSON + HTML report
@@ -71,11 +85,13 @@ NyayAI/
 ├── workers/                done - Celery, no Redis (see below)
 ├── api/                    done - FastAPI, upload/status/result/health
 │
-├── frontend/                🟡 scaffolded, running on mock data
+├── frontend/                ✅ wired to the real API (upload/poll/result)
 │   └── src/                PDF.js canvas, colored highlight overlay,
 │                           margin annotation rail, error sidebar
+│                           (mockData.js kept around, unused - api.js is
+│                           what App.jsx actually imports now)
 │
-├── train/                   ⬜ not started yet
+├── train/                   
 ├── config/, data/, scripts/, tests/, docs/
 ├── docker-compose.yml        qdrant only, no redis service
 └── README.md
@@ -119,14 +135,17 @@ instead (see "async jobs, no redis" below).
 
 **verify GPU works:**
 ```bash
-docker-compose up -d qdrant
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 ```
+should print `True` and your GPU's name. if it prints `False`, stop here and
+fix the CUDA/driver setup before going further - surya and InLegalBERT both
+expect a working GPU, and everything downstream (batch sizes, `--pool=solo`
+below) is tuned assuming this works.
 
 **ingest the legal corpus** (one-time, or after an act gets amended):
 ```bash
 uv run python scripts/ingest_corpus.py --all
 ```
-The `-Q pdf_processing` is required — see the note above.
 
 ---
 
@@ -139,11 +158,24 @@ uv run uvicorn api.main:app --reload
 
 **a worker** (needed for anything to actually get processed):
 ```bash
-uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing
+uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing --pool=solo
 ```
 the `-Q pdf_processing` isn't optional - a worker only consumes queues it's
 explicitly told to listen on. leaving it off means uploads just sit there
 forever with no error at all (found this out the hard way).
+
+`--pool=solo` isn't optional either, for a different reason: without it,
+Celery defaults to the `prefork` pool and forks one child process per CPU
+core. Each of those child processes independently imports `model.predict`
+and `ocr.surya_extractor` and loads its *own* copy of InLegalBERT and
+Surya's detection/recognition models onto the GPU the first time it picks
+up a task - the module-level caches in those files only dedupe loads
+*within* a process, not across forked siblings. On a 6GB card, two or
+three prefork children processing documents at the same time is enough
+to blow the VRAM budget on its own, independent of any single document's
+size. `--pool=solo` runs everything in one process, one task at a time,
+which matches this project's single-GPU, single-machine deployment
+target anyway.
 
 **frontend:**
 ```bash
@@ -151,8 +183,11 @@ cd frontend
 npm install
 npm run dev
 ```
-open `http://localhost:5173` - currently shows the viewer working end-to-end
-against mock error data, not real backend results yet.
+open `http://localhost:5173` - the viewer works end-to-end against the real
+backend now (`frontend/src/api.js`: `POST /upload` → poll `GET /status` →
+`GET /result`). `mockData.js` is still in the tree but nothing imports it
+anymore; `App.jsx` pulls from `api.js`. set `VITE_API_BASE_URL` in `.env` if
+the backend isn't on `http://localhost:8000`.
 
 ---
 
@@ -181,12 +216,35 @@ different one - no error, no crash, it just sits "queued" forever.
 
 ## training the model
 
-not built yet. `train/` is empty. the plan (per the roadmap) is to generate
-synthetic training data by deliberately corrupting real, verified legal text
-(spelling/grammar/citation corruption applied in that order, since grammar
-corruption changes token counts and would invalidate any index-based labels
-applied before it), then fine-tune InLegalBERT with the HuggingFace Trainer
-API. no numbers to report yet since none of this has actually run.
+`train/` is scaffolded now (`dataset.py`, `collator.py`, `train.py`,
+`metrics.py`, `evaluate.py`) but **has never actually been run** -
+`model/checkpoint/` is still an empty, DVC-tracked directory (0 files).
+`model/predict.py` keeps returning all-`O` labels until that changes; this
+is intentional degradation, not a crash.
+
+the intended flow:
+
+```bash
+uv run python scripts/generate_data.py --corpus corpus/sources/ --out data/training
+uv run python -m train.train
+uv run python -m train.evaluate
+```
+(`make generate-data`, `make train`, `make evaluate` do the same thing.)
+
+`generate_data.py` produces synthetic training data by deliberately
+corrupting real, verified legal text — spelling/grammar/citation corruption
+applied in that order, since grammar corruption changes token counts and
+would invalidate any index-based labels applied before it. `train.py` then
+fine-tunes InLegalBERT with the HuggingFace `Trainer` API, saving both model
+weights and the tokenizer into `model/checkpoint/` (so a future retrain from
+a different base checkpoint can never end up paired with a stale tokenizer).
+No numbers to report yet since none of this has actually run — hyperparameters
+in `train.py` are reasonable BERT-fine-tuning defaults, not empirically tuned
+for this task.
+
+after a real run, remember to `dvc add model/checkpoint` and push (see
+"data & model versioning" below) — otherwise the checkpoint only exists on
+whatever machine trained it.
 
 ---
 
@@ -266,18 +324,24 @@ python -m spacy download en_core_web_sm
 
 ## current status
 
-- [x] OCR pipeline (pdfplumber + surya)
+- [x] OCR pipeline (pdfplumber + surya, with process-wide model caching so a
+      Celery worker doesn't reload weights per document)
 - [x] model scaffold (InLegalBERT inference wiring - no fine-tuned weights)
-- [x] rule-based checkers (citation + entity consistency)
-- [x] pipeline orchestration (merge / dedupe / sort)
-- [x] renderer (annotated PDF + JSON/HTML reports)
+- [x] rule-based checkers (citation, entity, spelling, cross-reference)
+- [x] pipeline orchestration (merge / dedupe / sort, pluggable rule registry)
+- [x] renderer (annotated PDF + JSON/HTML reports - crashing bug fixed)
 - [x] FastAPI + Celery async jobs (filesystem + sqlite, no redis)
-- [x] React frontend scaffold (PDF.js viewer, mock data)
-- [ ] corpus ingestion - infra done, act-specific parsers in progress
-- [ ] connect frontend to the real API (currently mock data)
+- [x] React frontend, wired to the real API (not mock data)
+- [x] corpus ingestion - all six act parsers done (IPC, BNS, BNSS, CPC, CrPC,
+      Constitution), verified IPC→BNS and CrPC→BNSS mapping tables
 - [x] drop the redis service from docker-compose.yml (filesystem + sqlite broker in use)
 - [x] real automated test suite (Issue #50) - `pytest tests/ --ignore=tests/test_qdrant_live.py`
-- [ ] fine-tune InLegalBERT (need to generate training data first)
+- [x] config/housekeeping cleanup - `.env.example` fixed, `config/settings.py`
+      dead scratch notes removed, `model/pipeline.py` and
+      `corpus/parsers/base.py` dead code deleted
+- [ ] fine-tune InLegalBERT - `train/` is scaffolded, hasn't actually been run
+- [ ] auth on the API
+- [ ] deployment (M6 - not started)
 
 ---
 
@@ -322,6 +386,37 @@ python -m spacy download en_core_web_sm
   browser) is top-left, y-increases-down, matching pdfplumber. get this
   backwards and every highlight silently lands on the wrong half of the
   page - verified this against a real page before trusting either one.
+- **a fresh `SuryaExtractor()` per document isn't free just because you
+  reuse it across pages within one document** - the constructor used to
+  build brand-new `DetectionPredictor()`/`RecognitionPredictor()` instances
+  every call, and both push real weights onto CUDA. a Celery worker picks
+  up the next scanned document before python's GC/torch's caching allocator
+  necessarily hands back the previous instance's VRAM, so this manifested
+  as "works for the first few PDFs, OOMs later" rather than an immediate
+  crash - the same class of bug `model/predict.py`'s module-level cache
+  already solved for InLegalBERT, just not yet applied to surya. fixed with
+  the same pattern: process-wide cached predictors, instance-scoped (not
+  module-level) page-render cache so page 3 of one document can never leak
+  into page 3 of the next.
+- **a generated schedule table needs its own coverage check, not just a
+  smoke test** - the BNSS First Schedule extraction had two real gaps
+  (roughly section-numbers 128-162 and 299-322 missing entirely) that a
+  PR review caught by actually diffing covered numbers against the
+  expected range, not by spot-checking a few entries. re-running the
+  generator against the source PDF closed all but a handful of entries
+  (128, 129, 130, 138, 307 as of this writing) - worth a real coverage
+  assertion in the corpus test suite eventually, not just a manual PR note.
+- **writing real assertions against all six real act PDFs (Issue #50)
+  surfaced two small, previously-unnoticed things**: `Section.act` is a
+  display-cased name (`"CrPC"`, `"Constitution"`), not the dispatch-key
+  string (`"CRPC"`, `"CONSTITUTION"`) used to select the parser - harmless,
+  but worth knowing before comparing the two directly. and Constitution
+  Articles 28, 203, and 366 come back with an empty `.title` despite
+  `status="active"` - their marginal side-note title text appears to have
+  merged into `.body` instead, likely a two-column PDF layout artifact
+  specific to those three. neither blocks anything today; both are
+  candidates for a small follow-up issue against
+  `corpus/parsers/constitution.py`.
 
 ---
 
@@ -347,16 +442,21 @@ python -m spacy download en_core_web_sm
 - `en_core_web_sm` handles Indian names inconsistently (see above) - needs a
   fine-tuned Indian legal NER model eventually
 - no fine-tuned weights yet, so spelling/grammar/citation-shape detection via
-  the model returns nothing until `train/` exists
+  the model returns nothing until `train/train.py` actually gets run
 - no correction suggestions for ML-detected errors yet (citations do have
   suggestions, from the corpus payload)
-- IPC parser still in progress - see "stuff i learned" above for why it's
-  taking a while to get right
-- frontend is real now but running on mock data, not the actual backend yet
+- BNSS First Schedule extraction is nearly, not fully, complete - 5 entries
+  (section-numbers 128, 129, 130, 138, 307) are still missing as of this
+  writing, down from ~59 missing across two ranges before the last
+  generator run - see "stuff i learned" above
+- Constitution Articles 28, 203, and 366 come back with an empty `.title`
+  (their marginal side-note title merged into `.body` instead) - a small
+  parser gap, not a status/repeal issue, caught while writing `test_parser.py`
 - no auth on the API - fine for local single-user use, needs fixing before
   any real deployment. output cleanup exists now (`make cleanup-outputs`,
   see `scripts/cleanup_outputs.py`) but isn't scheduled automatically -
   needs a cron entry or systemd timer to actually run periodically.
+- deployment (M6) hasn't started - no Dockerfile, no Vercel config yet
 
 ---
 
@@ -376,6 +476,12 @@ directly in git. The configured remote (`.dvc/config`) is a local
 filesystem path, not a shared/cloud remote, so `dvc pull` on a different
 machine needs the remote pointed at wherever you actually keep the DVC
 storage first (`dvc remote modify local url <path>`).
+
+**right now `model/checkpoint.dvc` points at an empty directory (0 files)**
+- no fine-tuning run has happened yet (see "training the model" above), so
+  there's nothing real for `dvc pull` to fetch there today. this will start
+  meaning something once `train/train.py` actually gets run and the
+  checkpoint gets added/pushed.
 
 **On a fresh clone:**
 ```bash
