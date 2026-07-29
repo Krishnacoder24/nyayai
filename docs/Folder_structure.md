@@ -36,11 +36,12 @@ NyayAI/
 │   ├── checkpoint.dvc             # DVC pointer for model/checkpoint/ - see README's "data & model versioning"
 │   └── checkpoint/                # gitignored, populated by `dvc pull` or `make train`
 │
-├── rules/                        # citation, entity, and cross-reference checkers done, registered in registry.py
+├── rules/                        # citation, entity, cross-reference, and spelling checkers done, registered in registry.py
 │   ├── __init__.py
 │   ├── citation_checker.py        # done - regex + qdrant exact lookup via corpus.search
 │   ├── entity_checker.py          # done - NER + rapidfuzz consistency
 │   ├── cross_reference_checker.py # done - exhibit/annexure reference checking
+│   ├── spelling_checker.py        # done - rule-based legal-vocabulary complement to the ML model
 │   └── registry.py                # RULES list - add a new checker here only, engine.py never changes
 │   (date_checker.py, formatting_checker.py, abbreviation_checker.py, consistency_checker.py
 │    are planned future checkers with no file yet - not stubbed, just not started)
@@ -48,28 +49,27 @@ NyayAI/
 ├── corpus/                        # infra done; all six Act parsers built (IPC, BNS, BNSS, CPC, CRPC, Constitution)
 │   ├── __init__.py
 │   ├── ingest.py                  # top level: parse -> chunk -> embed -> upload
-│   │                              #   NOTE: has a stray unused `from surya import settings` import,
-│   │                              #   shadowed by the real `from config.settings import settings` - dead import
-│   ├── parser.py                  # dispatch only; _PARSERS dict currently only registers IPC
+│   ├── parser.py                  # dispatch only; _PARSERS dict registers all six acts (issue #26 -
+│   │                              #   deliberately independent parsers, no shared base class)
 │   ├── pdf_utils.py                # shared PDF text-extraction + header-stripping helpers -
 │   │                              #   single source of truth now (issue #26); parsers call these
 │   │                              #   instead of keeping private copies
 │   ├── chunker.py                  # splits Section.body by legal structure (Explanation/
 │   │                              #   Illustration/Exception markers), not by token count
-│   ├── embeddings.py               # wraps InLegalBERT (hardcoded, not a configurable choice);
-│   │                              #   file's own top comment incorrectly says "legal-bert-base-uncased" - stale
+│   ├── embeddings.py               # wraps InLegalBERT (hardcoded, not a configurable choice)
 │   ├── uploader.py                 # pushes to qdrant with metadata payload;
-│   │                              #   get_client() hardcodes localhost:6333, ignores settings.qdrant_url
+│   │                              #   get_client() respects settings.qdrant_url (issue #30)
 │   ├── search.py                   # lookup_section() - the only sanctioned way rules/ touches Qdrant
 │   ├── schemas.py                  # Section / Passage dataclasses (fields: act, unit_type, number,
 │   │                              #   title, body/text, status, metadata dict)
 │   └── parsers/
 │       ├── ipc.py                   # TOC-guided rewrite done (issue #25) - handles footnote/bracket
 │       │                            #   noise, missing periods, letter-suffixed chapters (VA/IXA/XXA)
-│       ├── bns.py                   # 0-byte placeholder
-│       ├── bnss.py                  # 0-byte placeholder
-│       ├── cpc.py                   # 0-byte placeholder
-│       └── constitution.py          # 0-byte placeholder
+│       ├── bns.py
+│       ├── bnss.py
+│       ├── cpc.py
+│       ├── crpc.py
+│       └── constitution.py
 │   └── sources/                   # raw legal text files (gitignored, large)
 │       ├── ipc/
 │       ├── bns/
@@ -100,14 +100,10 @@ NyayAI/
 │   ├── metrics.py                    # seqeval span-level F1
 │   └── evaluate.py                   # runs eval on test set, prints classification report
 │
-├── services/                      # analysis.py + storage.py done and in active use;
-│                                  #   report.py and upload.py are 0-byte placeholders, not wired
-│                                  #   anywhere - upload validation currently lives in api/routes/upload.py
+├── services/                      # done - analysis.py + storage.py, both in active use
 │   ├── __init__.py
 │   ├── analysis.py                   # AnalysisService: orchestrates OCR -> pipeline -> render -> save
-│   ├── storage.py                    # file save/load; flat filenames keyed by job_id under data/uploads, data/outputs
-│   ├── report.py                     # 0-byte placeholder
-│   └── upload.py                     # 0-byte placeholder
+│   └── storage.py                    # file save/load; flat filenames keyed by job_id under data/uploads, data/outputs
 │
 ├── api/                           # done, no auth
 │   ├── __init__.py
@@ -161,14 +157,18 @@ NyayAI/
 │   └── celery/                      # filesystem broker + sqlite result backend files live here
 │
 │
-├── tests/                          # NO REAL TESTS YET - see note below
-│   ├── conftest.py                    # empty (`pass`)
-│   ├── test_ocr.py                    # manual print-script, no assertions
-│   ├── test_parser.py                 # manual print-script, no assertions
-│   ├── test_model.py                  # empty (`pass`)
-│   ├── test_rules.py                  # empty (`pass`)
-│   ├── test_pipeline.py               # empty (`pass`)
-│   └── test_api.py                    # empty (`pass`)
+├── tests/                          # done (issue #50) - real automated suite
+│   ├── conftest.py                    # shared fixtures
+│   ├── test_ocr.py                    # real assertions now, against a real sample PDF
+│   ├── test_parser.py                 # real assertions against all six real act source PDFs
+│   ├── test_model.py                  # needs torch/transformers - GPU-machine only
+│   ├── test_rules.py                  # citation/entity/cross-reference/spelling checkers
+│   ├── test_pipeline.py               # merge/dedupe/reading-order sort
+│   ├── test_api.py                    # FastAPI routes, Celery mocked
+│   ├── test_renderer.py               # #33's regression tests
+│   └── test_qdrant_live.py            # needs a live Qdrant instance to run
+│   (run with `pytest tests/ --ignore=tests/test_qdrant_live.py` if Qdrant
+│    isn't up)
 │
 ├── scripts/
 │   ├── ingest_corpus.py               # thin wrapper: corpus/ingest.py

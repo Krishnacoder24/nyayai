@@ -10,12 +10,13 @@ plus a structured report.
 law firms, and legal aid organisations where document confidentiality and
 per-document cost both matter.
 
-**The full pipeline works end to end now**: upload a PDF in the real frontend
-→ it hits the real FastAPI backend → Celery runs OCR → rules (citation +
-entity + spelling + cross-reference) → merge/dedupe/sort → renders an
-annotated PDF and a report → the frontend polls and displays the real result,
-not mock data. The one piece still missing is the fine-tuned model - see
-"Status" below, it's not blocking the rest of this from being real.
+**The full pipeline is verified working end to end**: upload a real PDF in the
+real frontend → it hits the real FastAPI backend → Celery runs OCR → the
+fine-tuned InLegalBERT model + rules (citation + entity + spelling +
+cross-reference) → merge/dedupe/sort → renders an annotated PDF and a
+report → the frontend polls and displays the real result. This has been
+run against an actual sample FIR PDF, start to finish, not just exercised
+piece-by-piece in isolation.
 
 ---
 
@@ -24,22 +25,23 @@ not mock data. The one piece still missing is the fine-tuned model - see
 | Component | Status |
 |---|---|
 | OCR (`ocr/`) | ✅ done |
-| Model scaffold (`model/`) | ✅ wiring done — **no fine-tuned checkpoint yet**, so ML-based detection currently returns nothing (intentional graceful degradation, not a bug) |
+| Model (`model/`) | ✅ done — fine-tuned InLegalBERT checkpoint trained and in place, ML-based error detection is live |
 | Corpus (`corpus/`) | ✅ done — all six act parsers (IPC, BNS, BNSS, CPC, CrPC, Constitution) parse the real PDFs; verified IPC→BNS and CrPC→BNSS mapping tables in `corpus/data/` |
 | Rules (`rules/`) | ✅ done — citation, entity, spelling, cross-reference checkers, pluggable registry — see known limitations below |
-| Pipeline (`pipeline/`) | ✅ done |
+| Pipeline (`pipeline/`) | ✅ done — full PDF-in to annotated-PDF/report-out flow verified end-to-end on a real document |
 | Renderer (`renderer/`) | ✅ done — the crashing HTML-report bug is fixed |
 | API + workers (`api/`, `workers/`, `services/`) | ✅ done — no auth yet |
 | Frontend (`frontend/`) | ✅ done — wired to the real API, not mock data |
 | Tests (`tests/`) | ✅ done — real automated suite, see "running the test suite" below |
-| Fine-tuning (`train/`) | 🟡 scaffolded (training loop, dataset, metrics, evaluation all written) — **never actually run**, `model/checkpoint/` is still empty |
+| Fine-tuning (`train/`) | ✅ done — training run completed, `model/checkpoint/` has real weights |
 | Deployment | ⬜ not started |
 
 
-the model handles spelling/grammar/citation-shape; the two rule-based checkers
-handle things that need either an external source of truth (citation_checker)
-or whole-document memory the model doesn't have (entity_checker) since it only
-ever sees 512 tokens at a time.
+the model handles spelling/grammar/citation-shape; the rule-based checkers in
+`rules/` (citation, entity, spelling, cross-reference - registered in
+`rules/registry.py`) handle things that need either an external source of
+truth (citation_checker) or whole-document memory the model doesn't have
+(entity_checker) since it only ever sees 512 tokens at a time.
 
 ---
 
@@ -56,10 +58,10 @@ NyayAI/
 │   ├── router.py         decides which extractor each page needs
 │   └── pipeline.py       ties it together into one extract() call
 │
-├── model/                done (scaffold) - no fine-tuned weights yet
+├── model/                done - fine-tuned checkpoint trained and in place
 │   ├── schemas.py        ErrorSpan + BIO label scheme
 │   ├── preprocess.py     LineSpans -> token chunks (512 tokens, sliding window)
-│   ├── predict.py        InLegalBERT inference - returns all-O until a checkpoint exists
+│   ├── predict.py        InLegalBERT inference - loads model/checkpoint/
 │   └── postprocess.py    BIO labels -> ErrorSpans with real bboxes
 │
 ├── rules/                done
@@ -91,7 +93,7 @@ NyayAI/
 │                           (mockData.js kept around, unused - api.js is
 │                           what App.jsx actually imports now)
 │
-├── train/                   
+├── train/                   done - training run completed, checkpoint in model/checkpoint/
 ├── config/, data/, scripts/, tests/, docs/
 ├── docker-compose.yml        qdrant only, no redis service
 └── README.md
@@ -216,13 +218,11 @@ different one - no error, no crash, it just sits "queued" forever.
 
 ## training the model
 
-`train/` is scaffolded now (`dataset.py`, `collator.py`, `train.py`,
-`metrics.py`, `evaluate.py`) but **has never actually been run** -
-`model/checkpoint/` is still an empty, DVC-tracked directory (0 files).
-`model/predict.py` keeps returning all-`O` labels until that changes; this
-is intentional degradation, not a crash.
+`train/` is done and has actually been run - `model/checkpoint/` now has a
+real fine-tuned checkpoint (model weights + tokenizer), and
+`model/predict.py` loads it instead of falling back to all-`O` labels.
 
-the intended flow:
+the flow that was used:
 
 ```bash
 uv run python scripts/generate_data.py --corpus corpus/sources/ --out data/training
@@ -238,13 +238,13 @@ would invalidate any index-based labels applied before it. `train.py` then
 fine-tunes InLegalBERT with the HuggingFace `Trainer` API, saving both model
 weights and the tokenizer into `model/checkpoint/` (so a future retrain from
 a different base checkpoint can never end up paired with a stale tokenizer).
-No numbers to report yet since none of this has actually run — hyperparameters
-in `train.py` are reasonable BERT-fine-tuning defaults, not empirically tuned
-for this task.
+Hyperparameters in `train.py` are reasonable BERT-fine-tuning defaults, not
+empirically tuned for this task - a good next step if detection quality
+needs improving is a sweep, not a rewrite.
 
-after a real run, remember to `dvc add model/checkpoint` and push (see
-"data & model versioning" below) — otherwise the checkpoint only exists on
-whatever machine trained it.
+after any future retrain, remember to `dvc add model/checkpoint` and push
+(see "data & model versioning" below) — otherwise the new checkpoint only
+exists on whatever machine trained it.
 
 ---
 
@@ -326,7 +326,7 @@ python -m spacy download en_core_web_sm
 
 - [x] OCR pipeline (pdfplumber + surya, with process-wide model caching so a
       Celery worker doesn't reload weights per document)
-- [x] model scaffold (InLegalBERT inference wiring - no fine-tuned weights)
+- [x] model (InLegalBERT inference wiring, fine-tuned checkpoint trained and loaded)
 - [x] rule-based checkers (citation, entity, spelling, cross-reference)
 - [x] pipeline orchestration (merge / dedupe / sort, pluggable rule registry)
 - [x] renderer (annotated PDF + JSON/HTML reports - crashing bug fixed)
@@ -336,10 +336,13 @@ python -m spacy download en_core_web_sm
       Constitution), verified IPC→BNS and CrPC→BNSS mapping tables
 - [x] drop the redis service from docker-compose.yml (filesystem + sqlite broker in use)
 - [x] real automated test suite (Issue #50) - `pytest tests/ --ignore=tests/test_qdrant_live.py`
+- [x] full pipeline verified end-to-end on a real sample FIR PDF: upload →
+      OCR → model + rules → merge/dedupe/sort → annotated PDF + report →
+      frontend displays the real result (issue #52's checklist item)
 - [x] config/housekeeping cleanup - `.env.example` fixed, `config/settings.py`
       dead scratch notes removed, `model/pipeline.py` and
       `corpus/parsers/base.py` dead code deleted
-- [ ] fine-tune InLegalBERT - `train/` is scaffolded, hasn't actually been run
+- [x] fine-tune InLegalBERT - training run completed, `model/checkpoint/` has real weights
 - [ ] auth on the API
 - [ ] deployment (M6 - not started)
 
@@ -441,8 +444,6 @@ python -m spacy download en_core_web_sm
   but it's still slow
 - `en_core_web_sm` handles Indian names inconsistently (see above) - needs a
   fine-tuned Indian legal NER model eventually
-- no fine-tuned weights yet, so spelling/grammar/citation-shape detection via
-  the model returns nothing until `train/train.py` actually gets run
 - no correction suggestions for ML-detected errors yet (citations do have
   suggestions, from the corpus payload)
 - BNSS First Schedule extraction is nearly, not fully, complete - 5 entries
@@ -477,11 +478,10 @@ filesystem path, not a shared/cloud remote, so `dvc pull` on a different
 machine needs the remote pointed at wherever you actually keep the DVC
 storage first (`dvc remote modify local url <path>`).
 
-**right now `model/checkpoint.dvc` points at an empty directory (0 files)**
-- no fine-tuning run has happened yet (see "training the model" above), so
-  there's nothing real for `dvc pull` to fetch there today. this will start
-  meaning something once `train/train.py` actually gets run and the
-  checkpoint gets added/pushed.
+**`model/checkpoint/` now has a real trained checkpoint in it** (see
+"training the model" above) - make sure it's been `dvc add`ed and pushed
+(the exact commands are just below) so `dvc pull` on any other machine
+actually fetches something real instead of an empty directory.
 
 **On a fresh clone:**
 ```bash

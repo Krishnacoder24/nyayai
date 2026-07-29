@@ -86,33 +86,29 @@ returns BIO label IDs per token. `postprocess.py` reconstructs
 no database. no regex. no API calls. just tensors in, labels out.
 **status: scaffold complete, but there is no fine-tuned checkpoint yet** —
 `predict.py` detects the absence of `model/checkpoint/config.json` and
-returns all-`O` labels (no errors) rather than crashing. Every call to
-`predict()` currently also reloads the model + tokenizer from scratch —
-there is no caching across jobs yet (tracked as a known gap).
-
-`model/pipeline.py` also exists in the repo as a full duplicate of what
-`pipeline/engine.py` does — it predates the current `pipeline/` package
-and is dead code; nothing calls it. See "known gaps" below.
+returns all-`O` labels (no errors) rather than crashing. The model and
+tokenizer are cached at module load (see `predict.py`'s
+`_load_model_and_tokenizer()`) so a long-lived Celery worker only pays
+the load cost once, not once per document.
 
 runs on: GPU
 when: after OCR, in parallel with rules/
 
 ### `rules/`
-entry points: `check_citations(spans)`, `check_entities(spans)`
+entry point: `rules.registry.RULES` — a list of checker functions
 
-deterministic checkers. no model loading. citation checker uses regex to
+deterministic checkers, no model loading. citation checker uses regex to
 extract citation patterns then queries Qdrant via `corpus.search.lookup_section()`
 for exact section lookup. entity checker uses spaCy NER + rapidfuzz fuzzy
 matching (threshold=85) to find name inconsistencies across the full
-document. **status: both done.**
+document. `cross_reference_checker.py` catches references like "as
+mentioned in paragraph 3" where paragraph 3 doesn't exist, and
+`spelling_checker.py` is the rule-based legal-vocabulary complement to
+the ML model. **status: all four done.**
 
-each checker is independent — citation checker doesn't know entity
-checker exists. `pipeline/engine.py` calls both directly (hardcoded, not
-through a registry yet — see "known gaps").
-
-`rules/cross_reference_checker.py` is currently a 0-byte placeholder for
-a planned future checker (catching references like "as mentioned in
-paragraph 3" where paragraph 3 doesn't exist).
+each checker is independent — none know the others exist. `pipeline/engine.py`
+runs whatever's in `rules/registry.py`'s `RULES` list, so adding a fifth
+checker means registering it there, not editing `engine.py`.
 
 runs on: CPU
 when: after OCR, can run in parallel with model/
@@ -120,19 +116,18 @@ when: after OCR, can run in parallel with model/
 ### `pipeline/`
 entry point: `analyze(spans) -> list[ErrorSpan]`
 
-orchestration only. calls `model.predict` and the two rule checkers,
-passes results to `merger.py` and `deduplicate.py`, returns a clean sorted
-list of ErrorSpans. **status: done**, though the checker calls are
-hardcoded in `engine.py` rather than going through a pluggable registry —
-adding a third checker currently means editing `engine.py` directly.
+orchestration only. calls `model.predict` and every checker registered in
+`rules/registry.py`, passes results to `merger.py` and `deduplicate.py`,
+returns a clean sorted list of ErrorSpans. **status: done** - adding a
+new rule checker means registering it in `rules/registry.py`, not
+editing `engine.py`.
 
 data flow:
 ```
 list[LineSpan]
       │
       ├──► model.predict -> ErrorSpans (ML)
-      ├──► rules.citation_checker.check_citations -> ErrorSpans
-      ├──► rules.entity_checker.check_entities -> ErrorSpans
+      ├──► rules.registry.RULES (every registered checker) -> ErrorSpans
       │
       ▼
   merger.py   (combine all error lists)
@@ -238,13 +233,17 @@ class ErrorSpan:
     y1: float
     suggestion: str     # suggested correction (empty until a correction model exists)
     confidence: float   # 0.0 - 1.0
+    source: str         # which checker produced this span (empty until a checker fills it in)
+    explanation: str    # why this was flagged, for the frontend's hover popover -
+                         # citation/entity checkers fill this in; spelling/grammar leave
+                         # it blank until Issue #17 gives those checkers something real to say
     # highlight_color is derived, not stored: see ERROR_COLORS in config/constants.py
 ```
 
-There is currently no field on `ErrorSpan` indicating which subsystem
-produced it (model vs. citation rule vs. entity rule), and no
-`explanation` field for the planned rich-tooltip feature — both are
-tracked as open work, not yet implemented.
+`source` and `explanation` already exist on the dataclass (`model/schemas.py`) -
+the rich-tooltip feature this enables is still frontend work in progress
+(`HighlightOverlay.jsx` still shows the native `title` tooltip, not a real
+popover), tracked as issue #40.
 
 ### BIO label scheme
 used internally by `model/` for token classification. See `docs/model.md`
@@ -311,7 +310,7 @@ the pipeline, not the wire format.
 ## hardware assumptions
 
 - NVIDIA GPU with ≥ 6GB VRAM (dev: RTX 4050 laptop)
-- CUDA 13.2 (torch pinned to `2.4.1+cu124`)
+- CUDA 13.2 (torch pinned to `2.4.0+cu124`, matched to `transformers==4.48.0`)
 - surya OCR batch size: `RECOGNITION_BATCH_SIZE=32`, `DETECTOR_BATCH_SIZE=4`
 - InLegalBERT inference batch size: 8 chunks per forward pass
 - Qdrant running locally on port 6333 (via `docker-compose up -d qdrant`)
@@ -341,8 +340,11 @@ only surya OCR and InLegalBERT inference touch the GPU.
   yet, so ML error detection (spelling/grammar/citation-via-model) returns
   nothing today. Citation and entity checking work independently of this,
   since they're pure rule-based checkers. (tracked: issue #36)
-- `ErrorSpan` provenance (`source`) and rich-tooltip `explanation` fields
-  (tracked: issues #38, #40)
+- rich-tooltip frontend popover — `ErrorSpan.source`/`.explanation` are
+  already populated by the citation and entity checkers; the frontend
+  still needs a real positioned popover in `HighlightOverlay.jsx` to
+  replace the native `title` tooltip and actually show them (tracked:
+  issue #40)
 - entity checker uses `en_core_web_sm`, which handles Indian names poorly
   — a fine-tuned Indian legal NER model would improve this.
 - no correction suggestions — `ErrorSpan.suggestion` is empty for
@@ -350,8 +352,6 @@ only surya OCR and InLegalBERT inference touch the GPU.
   corpus's `replaced_by` metadata). (tracked: issue #41)
 - no authentication on the API — fine for local use, must be added before
   any deployment.
-- no real automated test suite yet — most test files are stubs.
-  (tracked: issue #50)
 
 **architectural refinements, not blockers** (folded in from `reviews/*.md`
 per issue #48 — these were real recommendations from an earlier
