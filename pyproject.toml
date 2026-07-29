@@ -53,6 +53,7 @@ dependencies = [
     "reportlab",
     "pytest",
     "dvc>=3.67.1",
+    "httpx>=0.28.1",
 ]
 
 [tool.uv.sources]

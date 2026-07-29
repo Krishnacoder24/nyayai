@@ -139,24 +139,11 @@ uv run uvicorn api.main:app --reload
 
 **a worker** (needed for anything to actually get processed):
 ```bash
-uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing --pool=solo
+uv run celery -A workers.celery_app worker --loglevel=info -Q pdf_processing
 ```
 the `-Q pdf_processing` isn't optional - a worker only consumes queues it's
 explicitly told to listen on. leaving it off means uploads just sit there
 forever with no error at all (found this out the hard way).
-
-`--pool=solo` isn't optional either, for a different reason: without it,
-Celery defaults to the `prefork` pool and forks one child process per CPU
-core. Each of those child processes independently imports `model.predict`
-and `ocr.surya_extractor` and loads its *own* copy of InLegalBERT and
-Surya's detection/recognition models onto the GPU the first time it picks
-up a task - the module-level caches in those files only dedupe loads
-*within* a process, not across forked siblings. On a 6GB card, two or
-three prefork children processing documents at the same time is enough
-to blow the VRAM budget on its own, independent of any single document's
-size. `--pool=solo` runs everything in one process, one task at a time,
-which matches this project's single-GPU, single-machine deployment
-target anyway.
 
 **frontend:**
 ```bash
@@ -205,8 +192,74 @@ API. no numbers to report yet since none of this has actually run.
 
 ## Dependency versions (frozen)
 
+these are pinned in `pyproject.toml` for a reason - `surya-ocr` and `transformers`
+in particular have a real, previously-hit incompatibility (`transformers` newer
+than `4.48.0` breaks surya's `SuryaOCRConfig` with `KeyError: 'encoder'`). don't
+bump any of these without a specific reason to.
+
+| package | version | why it's pinned |
+|---|---|---|
+| `torch` | `2.4.0+cu124` | matched to `transformers==4.48.0` and the CUDA 13.2 / RTX 4050 setup this was built against |
+| `transformers` | `4.48.0` | newer breaks surya's `SuryaOCRConfig` (see above) |
+| `surya-ocr` | `0.9.3` | scanned-page OCR fallback |
+| `qdrant-client` | `1.17.1` | corpus vector search |
+| `fastapi` | `0.115.0` | API layer |
+| `celery` | `5.4.0` | async job queue (filesystem broker + sqlite backend, no redis) |
+| `pydantic` / `pydantic-settings` | `2.8.2` / `2.5.2` | settings + schemas |
+
+full list, including unpinned (`>=`) utility deps like `rapidfuzz`, `spacy`, and
+`pyspellchecker`, is in `pyproject.toml` - that file is the source of truth, this
+table is just the ones worth a second look before touching.
+
+---
+
+## running the test suite
+
 ```bash
-pytest tests/ -v
+pytest tests/ --ignore=tests/test_qdrant_live.py -v
+```
+
+that excludes `tests/test_qdrant_live.py` on purpose - it's a **live** integration
+test against a real, ingested Qdrant instance (`docker-compose up -d qdrant` first,
+see "setup" above), not part of the regular automated run.
+
+everything else is fully mocked/synthetic - no GPU, no network, no live services:
+
+- `test_rules.py` mocks the corpus lookup and spaCy's NER (see `conftest.py`'s
+  `mock_lookup_section` / `mock_entity_nlp`) - it's testing our own
+  citation/entity logic, not the corpus's contents or spaCy's accuracy.
+- `test_model.py` mocks the tokenizer and the model itself - no InLegalBERT
+  weights get loaded, no GPU needed.
+- `test_pipeline.py` and `test_api.py` mock the ML/rules layer and Celery
+  respectively, so they only ever exercise their own orchestration logic.
+- `test_ocr.py` runs the real native-PDF extraction path against a small
+  reportlab-generated sample FIR (see `conftest.py`'s `sample_pdf_path`) - it
+  does NOT exercise the surya scanned-page path (needs a real scanned PDF, out
+  of scope for an automated fixture). for that, see below.
+- `test_parser.py` runs the real parsers against the actual act PDFs in
+  `corpus/sources/` - the one file in this suite doing real, not mocked, work.
+
+**`test_parser.py` is slow on purpose** - it's parsing six real, 1-3MB legal
+PDFs with pdfplumber (each parsed once per run, cached via `lru_cache`), which
+costs ~4-5 minutes total. for a fast loop while iterating on anything else:
+
+```bash
+pytest tests/ --ignore=tests/test_qdrant_live.py --ignore=tests/test_parser.py -v
+```
+
+**manual OCR smoke test against a real document** (not part of the automated
+suite - no assertions, just prints what `extract()` sees, useful for eyeballing
+a real scanned FIR that's messier than the synthetic fixture):
+
+```bash
+make test-ocr FILE=path/to/real_scanned_fir.pdf
+```
+
+**one dependency this needs that isn't pinned above:** `httpx`, for FastAPI's
+`TestClient` in `test_api.py`. and if `en_core_web_sm` isn't already pulled down:
+
+```bash
+python -m spacy download en_core_web_sm
 ```
 
 ---
@@ -223,6 +276,7 @@ pytest tests/ -v
 - [ ] corpus ingestion - infra done, act-specific parsers in progress
 - [ ] connect frontend to the real API (currently mock data)
 - [x] drop the redis service from docker-compose.yml (filesystem + sqlite broker in use)
+- [x] real automated test suite (Issue #50) - `pytest tests/ --ignore=tests/test_qdrant_live.py`
 - [ ] fine-tune InLegalBERT (need to generate training data first)
 
 ---

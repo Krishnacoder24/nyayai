@@ -157,12 +157,13 @@ choice), and uploads to Qdrant with metadata (`corpus/uploader.py`).
 `search.py` provides the query interface (`lookup_section()`) used by
 `rules/citation_checker.py`.
 
-**status: infrastructure done, but only the IPC parser exists in
-`corpus/parsers/`, and it's still the original naive regex version — none
-of the TOC-guided parsing improvements have landed.** `bns.py`, `bnss.py`,
-`cpc.py`, and `constitution.py` are all 0-byte placeholder files, and only
-IPC is registered in `corpus/parser.py`'s parser dict. Full detail in
-`docs/corpus.md`.
+**status: infrastructure done, and all six acts now have their own
+parser** (`corpus/parsers/{ipc,bns,bnss,cpc,crpc,constitution}.py`), each
+registered in `corpus/parser.py`'s `_PARSERS` dict — per #26, deliberately
+independent implementations, no shared base class. A clean end-to-end
+`scripts/ingest_corpus.py --all` run against a live Qdrant instance is
+still the thing to re-verify before calling this fully closed (see the
+QA checklist, issue #52). Full detail in `docs/corpus.md`.
 
 ### `renderer/`
 entry point: `annotate_pdf(pdf_path, errors) -> annotated_pdf_bytes`
@@ -170,20 +171,20 @@ entry point: `annotate_pdf(pdf_path, errors) -> annotated_pdf_bytes`
 takes the original PDF and a list of ErrorSpans, draws colored highlight
 boxes at the correct bbox coordinates on each page, returns the annotated
 PDF as bytes. also generates a JSON report (`report.py`) and an HTML
-report (`html_report.py`). **status: done, except `html_report.py`
-currently has a live bug** — `_error_row()` uses an invalid f-string format
-spec and raises `ValueError` on every report containing at least one
-error, which today is every report (tracked as a P0 in the issue tracker).
+report (`html_report.py`). **status: done.** `html_report.py`'s
+`_error_row()` used to crash on every report with at least one error (an
+invalid f-string format spec) - fixed in #33, with regression tests added.
 
 ### `services/`
 business logic between routes and packages. `analysis.py`'s
 `AnalysisService` orchestrates the full pipeline for one document:
 OCR → analyze → render → save. routes call services, services call
-packages. routes never call packages directly. **status:
-`analysis.py` and `storage.py` are done and are the two files actually
-used.** `services/report.py` and `services/upload.py` are 0-byte files —
-placeholders that aren't wired into anything; upload validation currently
-lives directly in `api/routes/upload.py` instead.
+packages. routes never call packages directly. **status: done** -
+`analysis.py` and `storage.py` are the two files here; report building
+lives in `renderer/report.py` and upload validation lives directly in
+`api/routes/upload.py`, so there was never a need for separate
+`services/report.py` / `services/upload.py` files - the empty
+placeholders that used to sit here (never imported anywhere) were removed.
 
 ### `api/`
 FastAPI app. thin routes that validate input, hand off to services, and
@@ -289,7 +290,7 @@ POST /upload
        pipeline.engine.analyze(spans) -> errors
        renderer.annotate_pdf.annotate_pdf(pdf, errors) -> annotated bytes
        renderer.report.build_report(...) -> report dict
-       renderer.html_report.render_html(...) -> html string  [currently crashes, see above]
+       renderer.html_report.render_html(...) -> html string
        services.storage saves all outputs under data/outputs/{job_id}_*
   -> Celery's own result backend (SQLite) tracks job state, not a custom field
 
@@ -334,13 +335,6 @@ only surya OCR and InLegalBERT inference touch the GPU.
 ---
 
 ## known limitations & gaps
-
-**correctness bugs (tracked in the issue tracker):**
-- `renderer/html_report.py` crashes on every report with at least one
-  error (invalid f-string format spec) — P0.
-- `corpus/uploader.get_client()` / `corpus/search.lookup_section()` default
-  to a hardcoded `localhost:6333`, ignoring `settings.qdrant_url`.
-- `model/pipeline.py` is dead code, a duplicate of `pipeline/engine.py`.
 
 **not yet built:**
 - fine-tuned model weights — `model/checkpoint/` doesn't have real weights
