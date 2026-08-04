@@ -32,11 +32,7 @@ def run_analysis(job_id: str) -> dict:
     in addition to being saved as report_json_path(job_id).
     """
     pdf_path = upload_path(job_id)
-    # prefer the filename the user actually uploaded (e.g. "FIR_2024.pdf")
-    # over the internal job_id-based storage name - falls back to the
-    # storage name only if no metadata was saved for this job (e.g. an
-    # upload from before services.storage tracked this, or a caller that
-    # invoked save_upload without passing original_filename).
+
     source_filename = get_original_filename(job_id) or pdf_path.name
 
     spans = extract(pdf_path)
